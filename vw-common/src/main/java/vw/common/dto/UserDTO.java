@@ -4,7 +4,9 @@ import java.time.Instant;
 
 public class UserDTO extends GenericDTO {
 
-    private String firstName;
+	private static final long serialVersionUID = -6693716539159163146L;
+
+	private String firstName;
 
     private String surname;
 

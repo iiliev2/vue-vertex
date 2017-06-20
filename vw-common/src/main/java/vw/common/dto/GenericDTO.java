@@ -5,7 +5,9 @@ import java.time.Instant;
 
 public class GenericDTO implements Serializable{
 
-    private String id;
+  	private static final long serialVersionUID = 4975400837194252596L;
+
+	private String id;
 
     private Long version;
 
