@@ -2,6 +2,7 @@ package vw.server.launcher;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import vw.server.webapi.ManageUserRestService;
 
 public class VertexLauncher {
 
@@ -9,7 +10,7 @@ public class VertexLauncher {
 
     public static void main(String[] args) {
         DeploymentOptions options = new DeploymentOptions();
-        String verticleYoDeploy = "vw.server.webapi.ManageUserRestService";
+        String verticleYoDeploy = ManageUserRestService.class.getName();
         VERTX.deployVerticle(verticleYoDeploy, options, res -> {
             if (res.succeeded()) {
                 System.out.printf("Verticle with id : %s is successfuly deployed!%n", res.result());

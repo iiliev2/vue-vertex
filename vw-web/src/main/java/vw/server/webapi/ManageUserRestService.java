@@ -21,21 +21,21 @@ import java.util.Optional;
 
 public class ManageUserRestService extends AbstractVerticle {
 
-    private static final int HTTP_PORT = 8080;
+    static final int HTTP_PORT = 8080;
 
     private static final String CONTENT_TYPE = "content-type";
     private static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";
     private static final String TEXT_HTML = "text/html";
 
+    static final String CONTEXT_ROOT = "/";
     private static final String USER_ID = "userID";
     private static final String URL_USER_BY_ID = "/api/user/:" + USER_ID;
     private static final String URL_ADD_USER = "/api/user/create";
     private static final String URL_GET_ALL_USERS = "/api/users";
-    private static final String CONTEXT_ROOT = "/";
     private static final String USER_CONTEXT = "users";
     private static final String STATIC_RESOURCES_CONTEXT = "/" + USER_CONTEXT + "/*";
 
-    private static final String ROOT_CONTEXT_WELCOME_MESSAGE = "<h1>Vert.x application is up and running!</h1>";
+    static final String ROOT_CONTEXT_WELCOME_MESSAGE = "<h1>Vert.x application is up and running!</h1>";
 
     private static final String INITIAL_USER_ID = "1";
 
@@ -72,7 +72,6 @@ public class ManageUserRestService extends AbstractVerticle {
         restAPIRouter.get(URL_USER_BY_ID).handler(this::getUserById);
         restAPIRouter.post(URL_ADD_USER).handler(this::createUser);
         restAPIRouter.delete(URL_USER_BY_ID).handler(this::deleteUser);
-
 
         restAPIRouter.route(STATIC_RESOURCES_CONTEXT).handler(StaticHandler.create(USER_CONTEXT));
 
