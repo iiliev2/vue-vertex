@@ -30,6 +30,7 @@ public class ManageUserRestService extends AbstractVerticle {
     private static final String USER_ID = "userID";
     private static final String URL_USER_BY_ID = "/api/user/:" + USER_ID;
     private static final String URL_ADD_USER = "/api/user/create";
+    private static final String URL_GET_ALL_USERS = "/api/users";
     private static final String CONTEXT_ROOT = "/";
     private static final String USER_CONTEXT = "users";
     private static final String STATIC_RESOURCES_CONTEXT = "/" + USER_CONTEXT + "/*";
@@ -67,6 +68,7 @@ public class ManageUserRestService extends AbstractVerticle {
         bindRootContext(restAPIRouter);
 
         // Restful api method handlers
+        restAPIRouter.get(URL_GET_ALL_USERS).handler(this::getAllUsers);
         restAPIRouter.get(URL_USER_BY_ID).handler(this::getUserById);
         restAPIRouter.post(URL_ADD_USER).handler(this::createUser);
         restAPIRouter.delete(URL_USER_BY_ID).handler(this::deleteUser);
@@ -110,6 +112,16 @@ public class ManageUserRestService extends AbstractVerticle {
                     .putHeader(CONTENT_TYPE, TEXT_HTML)
                     .end(ROOT_CONTEXT_WELCOME_MESSAGE);
         });
+    }
+
+    /**
+     * Restful service, that retrieves all users
+     * @param routingContext vertx get all users router routing context for restful web api
+     */
+    private void getAllUsers(RoutingContext routingContext) {
+        routingContext.response()
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
+                .end(Json.encodePrettily(users.values()));
     }
 
     /**
