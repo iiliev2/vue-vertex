@@ -18,7 +18,7 @@ module.exports = {
 
 	output : {
 		path : PATHS.build,
-		publicPath : '/assets/',
+		publicPath : '/tmp/',
 		filename : 'app-bundle.js'
 	}
 
