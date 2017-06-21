@@ -1,6 +1,11 @@
 package vw.server.webapi;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.Json;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -8,6 +13,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import vw.common.dto.UserDTO;
+import vw.server.common.HttpStatusCodeEnum;
 
 import java.io.IOException;
 
@@ -19,6 +26,7 @@ import java.io.IOException;
 public class ManageUsetRestServiceTest {
 
     private static final String LOCALHOST = "localhost";
+    private static final String SIMPLE_CREATE_USER_JSON_FILE = "C:/Projects/vue-vertex/vw-web/src/test/resources/simple_user_for_creation.json";
 
     private Vertx vertx;
 
@@ -64,6 +72,46 @@ public class ManageUsetRestServiceTest {
                 async.complete();
             });
         });
+    }
+
+    @Test
+    public void checkThatWeCanAdd(TestContext context) {
+        readJsonFile(context, context.async());
+    }
+
+    private void readJsonFile(TestContext context, Async async) {
+        vertx.fileSystem().readFile(SIMPLE_CREATE_USER_JSON_FILE, result -> {
+            if (result.succeeded()) {
+                createUser(context, async, result.result());
+            } else {
+                context.fail(result.cause());
+            }
+        });
+    }
+
+    private void createUser(TestContext context, Async async, Buffer fileContent) {
+        vertx.createHttpClient().post(ManageUserRestService.HTTP_PORT, LOCALHOST, ManageUserRestService.URL_ADD_USER)
+                .putHeader(ManageUserRestService.CONTENT_TYPE, ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8)
+                .putHeader(ManageUserRestService.CONTENT_LENGTH_HEADER, Integer.toString(fileContent.toString().length()))
+                .handler(response -> {
+                    context.assertEquals(response.statusCode(), HttpStatusCodeEnum.CREATED.getStatusCode());
+                    context.assertTrue(response.headers().get(ManageUserRestService.CONTENT_TYPE).contains(ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8));
+                    response.bodyHandler(body -> {
+                        final UserDTO user = Json.decodeValue(body.toString(), UserDTO.class);
+                        context.assertEquals(user.getFirstName(), "Pesho");
+                        context.assertEquals(user.getSurname(), "Stupid");
+                        context.assertEquals(user.getLastName(), "Peshov");
+                        context.assertEquals(user.getVersion(), 1L);
+                        context.assertNotNull(user.getId());
+                        async.complete();
+                    }).exceptionHandler( exception -> {
+                        if(exception != null){
+                            context.fail();
+                        }
+                    });
+                })
+                .write(fileContent.toString())
+                .end();
     }
 
 }

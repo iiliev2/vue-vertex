@@ -23,17 +23,18 @@ public class ManageUserRestService extends AbstractVerticle {
 
     static final int HTTP_PORT = 23000;
 
-    private static final String CONTENT_TYPE = "content-type";
-    private static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";
-    private static final String TEXT_HTML = "text/html";
+    static final String CONTENT_TYPE = "content-type";
+    static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json";
+    static final String TEXT_HTML = "text/html";
+    static final String CONTENT_LENGTH_HEADER = "content-length";
 
     static final String CONTEXT_ROOT = "/";
-    private static final String USER_ID = "userID";
-    private static final String URL_USER_BY_ID = "/api/user/:" + USER_ID;
-    private static final String URL_ADD_USER = "/api/user/create";
-    private static final String URL_GET_ALL_USERS = "/api/users";
-    private static final String USER_CONTEXT = "users";
-    private static final String STATIC_RESOURCES_CONTEXT = "/" + USER_CONTEXT + "/*";
+    static final String USER_ID = "userID";
+    static final String URL_USER_BY_ID = "/api/user/:" + USER_ID;
+    static final String URL_ADD_USER = "/api/user/create";
+    static final String URL_GET_ALL_USERS = "/api/users";
+    static final String USER_CONTEXT = "users";
+    static final String STATIC_RESOURCES_CONTEXT = "/" + USER_CONTEXT + "/*";
 
     static final String ROOT_CONTEXT_WELCOME_MESSAGE = "<h1>Vert.x application is up and running!</h1>";
 
@@ -159,7 +160,7 @@ public class ManageUserRestService extends AbstractVerticle {
             routingContext.response()
                     .setStatusCode(HttpStatusCodeEnum.CREATED.getStatusCode())
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-                    .end(Json.encodePrettily(Json.encodePrettily(userDTO)));
+                    .end(Json.encodePrettily(userDTO));
         }
     }
 
