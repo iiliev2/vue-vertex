@@ -9,9 +9,9 @@
 	<packaging>pom</packaging>
 	<version>3.4.1</version>
 	<modules>
+		<module>../vue-fe</module>
 		<module>../vw-web</module>
 		<module>../vw-common</module>
-		<module>../vue-fe</module>
 	</modules>
 
 	<build>

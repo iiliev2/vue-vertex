@@ -49,7 +49,7 @@
 							<arguments>run build</arguments>
 						</configuration>
 					</execution>
-
+<!-- 
 					<execution>
 						<id>npm run dev</id>
 						<goals>
@@ -58,7 +58,7 @@
 						<configuration>
 							<arguments>run dev</arguments>
 						</configuration>
-					</execution>
+					</execution> -->
 				</executions>
 			</plugin>
 		</plugins>

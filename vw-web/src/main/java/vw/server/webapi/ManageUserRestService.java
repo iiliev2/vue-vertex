@@ -21,7 +21,7 @@ import java.util.Optional;
 
 public class ManageUserRestService extends AbstractVerticle {
 
-    static final int HTTP_PORT = 8080;
+    static final int HTTP_PORT = 23000;
 
     private static final String CONTENT_TYPE = "content-type";
     private static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";

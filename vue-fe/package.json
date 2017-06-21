@@ -1,0 +1,16 @@
+{
+  "name": "vue-fe",
+  "version": "3.4.1",
+  "description": "",
+  "main": "./app",
+  "scripts": {
+    "build": "webpack -p",
+    "dev": "webpack-dev-server --inline --hot"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "1.12.9",
+    "webpack-dev-server": "1.14.0"
+  }
+}
