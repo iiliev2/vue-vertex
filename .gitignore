@@ -8,3 +8,7 @@
 /**/.settings/**
 /**/target/
 /**/target/**
+/./idea/
+/**/.idea/
+/**/.idea/**
+*.iml
