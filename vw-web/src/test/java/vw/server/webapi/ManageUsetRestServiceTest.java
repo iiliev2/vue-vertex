@@ -26,7 +26,7 @@ import java.io.IOException;
 public class ManageUsetRestServiceTest {
 
     private static final String LOCALHOST = "localhost";
-    private static final String SIMPLE_CREATE_USER_JSON_FILE = "C:/Projects/vue-vertex/vw-web/src/test/resources/simple_user_for_creation.json";
+    private static final String SIMPLE_CREATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_creation.json";
 
     private Vertx vertx;
 
