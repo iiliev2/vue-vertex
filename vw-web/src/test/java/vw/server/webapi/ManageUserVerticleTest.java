@@ -24,13 +24,21 @@ import java.util.List;
  * The test uses vertx-unit, so we declare a custom runner.
  */
 @RunWith(VertxUnitRunner.class)
-public class ManageUsetRestServiceTest {
+public class ManageUserVerticleTest {
 
     private static final String LOCALHOST = "localhost";
+    private static final String INDEX_PAGE_CONTEXT = "/";
+
     private static final String USER_ID_TO_FIND = "1";
 
     private static final String SIMPLE_CREATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_creation.json";
     private static final String SIMPLE_UPDATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_edition.json";
+
+    private static final String INDEX_PAGE_TITLE = "<title>App</title>";
+    private static final String ADD_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.ADD_USER_SUB_CONTEXT;
+    private static final String EDIT_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.EDIT_USER_SUB_CONTEXT;
+    private static final String GET_ALL_USERS_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.GET_ALL_USERS_SUB_CONTEXT;
+    private static final String USER_BY_ID_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.USER_BY_ID_SUB_CONTEXT;
 
     private Vertx vertx;
 
@@ -45,7 +53,7 @@ public class ManageUsetRestServiceTest {
     @Before
     public void setUp(TestContext context) throws IOException {
         vertx = Vertx.vertx();
-        vertx.deployVerticle(ManageUserRestService.class.getName(), context.asyncAssertSuccess());
+        vertx.deployVerticle(ManageUserVerticle.class.getName(), context.asyncAssertSuccess());
     }
 
     /**
@@ -70,11 +78,11 @@ public class ManageUsetRestServiceTest {
         // message. Then, we call the `complete` method on the async handler to declare this async (and here the test) done.
         // Notice that the assertions are made on the 'context' object and are not Junit assert. This ways it manage the
         // async aspect of the test the right way.
-        vertx.createHttpClient().getNow(ManageUserRestService.HTTP_PORT,
+        vertx.createHttpClient().getNow(ManageUserVerticle.HTTP_PORT,
                 LOCALHOST,
-                ManageUserRestService.CONTEXT_ROOT,
+                INDEX_PAGE_CONTEXT,
                 response -> response.handler(body -> {
-                    context.assertTrue(body.toString().contains(ManageUserRestService.ROOT_CONTEXT_WELCOME_MESSAGE));
+                    context.assertTrue(body.toString().contains(INDEX_PAGE_TITLE));
                     async.complete();
                 }));
     }
@@ -98,11 +106,11 @@ public class ManageUsetRestServiceTest {
     @Test
     public void getAllUsers(TestContext context) {
         Async async = context.async();
-        vertx.createHttpClient().get(ManageUserRestService.HTTP_PORT, LOCALHOST, ManageUserRestService.URL_GET_ALL_USERS)
-                .putHeader(ManageUserRestService.CONTENT_TYPE, ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8)
+        vertx.createHttpClient().get(ManageUserVerticle.HTTP_PORT, LOCALHOST, GET_ALL_USERS_WEB_API_URL)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), HttpStatusCodeEnum.OK.getStatusCode());
-                    context.assertTrue(response.headers().get(ManageUserRestService.CONTENT_TYPE).contains(ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8));
+                    context.assertTrue(response.headers().get(ManageUserVerticle.HEADER_CONTENT_TYPE).contains(ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8));
                     response.bodyHandler(body -> {
                         //Just test decode
                         Json.decodeValue(body.toString(), List.class);
@@ -115,9 +123,9 @@ public class ManageUsetRestServiceTest {
     @Test
     public void getUserById(TestContext context) {
         Async async = context.async();
-        vertx.createHttpClient().get(ManageUserRestService.HTTP_PORT, LOCALHOST, ManageUserRestService.URL_USER_BY_ID)
-                .putHeader(ManageUserRestService.CONTENT_TYPE, ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8)
-                .putHeader(ManageUserRestService.CONTENT_LENGTH_HEADER, Integer.toString(USER_ID_TO_FIND.length()))
+        vertx.createHttpClient().get(ManageUserVerticle.HTTP_PORT, LOCALHOST, USER_BY_ID_WEB_API_URL)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_LENGTH, Integer.toString(USER_ID_TO_FIND.length()))
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), HttpStatusCodeEnum.NOT_FOUND.getStatusCode());
                     async.complete();
@@ -129,9 +137,9 @@ public class ManageUsetRestServiceTest {
     @Test
     public void deleteUserBySuccessfulyId(TestContext context) {
         Async async = context.async();
-        vertx.createHttpClient().delete(ManageUserRestService.HTTP_PORT, LOCALHOST, ManageUserRestService.URL_USER_BY_ID)
-                .putHeader(ManageUserRestService.CONTENT_TYPE, ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8)
-                .putHeader(ManageUserRestService.CONTENT_LENGTH_HEADER, Integer.toString(USER_ID_TO_FIND.length()))
+        vertx.createHttpClient().delete(ManageUserVerticle.HTTP_PORT, LOCALHOST, USER_BY_ID_WEB_API_URL)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_LENGTH, Integer.toString(USER_ID_TO_FIND.length()))
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), HttpStatusCodeEnum.NO_CONTENT.getStatusCode());
                     async.complete();
@@ -146,7 +154,7 @@ public class ManageUsetRestServiceTest {
                 if (isCreate) {
                     manageUser(
                             result.result(),
-                            ManageUserRestService.URL_ADD_USER,
+                            ADD_USER_WEB_API_URL,
                             addUserHttpClientResponseHandler(
                                     context,
                                     HttpStatusCodeEnum.CREATED,
@@ -157,7 +165,7 @@ public class ManageUsetRestServiceTest {
                 } else {
                     manageUser(
                             result.result(),
-                            ManageUserRestService.URL_EDIT_USER,
+                            EDIT_USER_WEB_API_URL,
                             editUserHttpClientResponseHandler(
                                     context,
                                     HttpStatusCodeEnum.NOT_FOUND,
@@ -170,9 +178,9 @@ public class ManageUsetRestServiceTest {
     }
 
     private void manageUser(Buffer fileContent, String operationURL, Handler<HttpClientResponse> clientResponseHandler) {
-        vertx.createHttpClient().post(ManageUserRestService.HTTP_PORT, LOCALHOST, operationURL)
-                .putHeader(ManageUserRestService.CONTENT_TYPE, ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8)
-                .putHeader(ManageUserRestService.CONTENT_LENGTH_HEADER, Integer.toString(fileContent.toString().length()))
+        vertx.createHttpClient().post(ManageUserVerticle.HTTP_PORT, LOCALHOST, operationURL)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
+                .putHeader(ManageUserVerticle.HEADER_CONTENT_LENGTH, Integer.toString(fileContent.toString().length()))
                 .handler(clientResponseHandler)
                 .write(fileContent.toString())
                 .end();
@@ -181,7 +189,7 @@ public class ManageUsetRestServiceTest {
     private Handler<HttpClientResponse> addUserHttpClientResponseHandler(TestContext context, HttpStatusCodeEnum statusCode, Handler<Buffer> bodyHandler) {
         return response -> {
             context.assertEquals(response.statusCode(), statusCode.getStatusCode());
-            context.assertTrue(response.headers().get(ManageUserRestService.CONTENT_TYPE).contains(ManageUserRestService.APPLICATION_JSON_CHARSET_UTF_8));
+            context.assertTrue(response.headers().get(ManageUserVerticle.HEADER_CONTENT_TYPE).contains(ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8));
             response.
                     bodyHandler(bodyHandler).
                     exceptionHandler(defineThrowableHandler(context));
