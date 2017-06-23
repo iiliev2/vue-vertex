@@ -3,6 +3,7 @@ package vw.server.webapi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import vw.common.dto.UserDTO;
@@ -21,9 +22,9 @@ public class ManageUserRestController {
 
     private ManageUserService manageUserService;
 
-    public ManageUserRestController(Vertx vertx) {
+    public ManageUserRestController(Vertx vertx, MongoClient mongoClient) {
         this.restAPIRouter = Router.router(vertx);
-        this.manageUserService = new ManageUserService();
+        this.manageUserService = new ManageUserService(mongoClient);
 
         configure();
     }
@@ -42,9 +43,14 @@ public class ManageUserRestController {
      * @param routingContext vertx get all users restAPIRouter routing context for restful web api
      */
     private void getAllUsers(RoutingContext routingContext) {
-        sendSuccess(HttpStatusCodeEnum.OK,
-                routingContext.response(),
-                Json.encodePrettily(manageUserService.getAllUsers()));
+        manageUserService.getAllUsers(r -> {
+            if(r.succeeded()){
+                sendSuccess(HttpStatusCodeEnum.OK, routingContext.response(), Json.encodePrettily(r.result()));
+            } else {
+                sendError(HttpStatusCodeEnum.INTERNAL_SERVER_ERROR, routingContext.response());
+                r.cause().printStackTrace();
+            }
+        });
     }
 
     /**

@@ -1,18 +1,29 @@
 package vw.server.sevice;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.MongoClient;
 import vw.common.dto.UserDTO;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class ManageUserService {
 
     private static final String INITIAL_USER_ID = "1";
+    private static final String COLLECTION = "user";
 
     private Map<String, UserDTO> users = new ConcurrentHashMap<>();
 
-    public ManageUserService() {
-        setMockupInitialData();
+    private MongoClient mongoClient;
+
+    public ManageUserService(MongoClient mongoClient) {
+        this.mongoClient = mongoClient;
+
+        //setMockupInitialData();
     }
 
     /**
@@ -29,6 +40,7 @@ public class ManageUserService {
     /**
      * Adds a user to user map
      * Used only for development purposes.
+     *
      * @param user to be added to users map
      */
     private void addUserToPersistence(UserDTO user) {
@@ -37,14 +49,30 @@ public class ManageUserService {
 
     /**
      * Retrieves all users from persistence
-     * @return all users
+     * @param handler return all users or failure cause
      */
-    public Collection<UserDTO> getAllUsers() {
-        return users.values();
+    public void getAllUsers(Handler<AsyncResult<List<UserDTO>>> handler) {
+        mongoClient.find(COLLECTION, new JsonObject(), findAllResultHandler -> {
+            if (findAllResultHandler.succeeded()) {
+                handler.handle(
+                        Future.succeededFuture(
+                            findAllResultHandler.result().stream().map(
+                                document -> new UserDTO(
+                                    document.getString("id"),
+                                    document.getLong("version"),
+                                    document.getString("firstName"),
+                                    document.getString("surname"),
+                                    document.getString("lastName"))
+                            ).collect(Collectors.toList())));
+            } else {
+                handler.handle(Future.failedFuture(findAllResultHandler.cause()));
+            }
+        });
     }
 
     /**
      * Retrieves a user by id from persistence
+     *
      * @param userID that we search
      * @return found user or null
      */
@@ -54,6 +82,7 @@ public class ManageUserService {
 
     /**
      * Creates a user in persistence
+     *
      * @param userDTO user to create
      * @return created user
      */
@@ -67,12 +96,13 @@ public class ManageUserService {
 
     /**
      * Updates a user in persistence
+     *
      * @param userDTO user to update
      * @return updated user or null if user does not exists
      */
     public UserDTO updateUser(UserDTO userDTO) {
         UserDTO oldUserVersion = users.get(userDTO.getId());
-        if(oldUserVersion == null){
+        if (oldUserVersion == null) {
             return null;
         } else {
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
@@ -84,6 +114,7 @@ public class ManageUserService {
 
     /**
      * Deletes a user by id
+     *
      * @param userID user to be deleted
      */
     public void deleteUserById(String userID) {

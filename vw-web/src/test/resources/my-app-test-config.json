@@ -1,0 +1,6 @@
+{
+  "app.http.host": "localhost",
+  "http.port": 23001,
+  "db_name": "vertx_test",
+  "connection_string": "mongodb://localhost:27017"
+}

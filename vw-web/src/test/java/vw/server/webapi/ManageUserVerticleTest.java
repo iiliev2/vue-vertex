@@ -1,11 +1,13 @@
 package vw.server.webapi;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -17,7 +19,12 @@ import vw.common.dto.UserDTO;
 import vw.server.common.HttpStatusCodeEnum;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Scanner;
+
+import static vw.server.webapi.ManageUserVerticle.DEFAULT_HTTP_PORT_VALUE;
+import static vw.server.webapi.ManageUserVerticle.HTTP_PORT_KEY;
 
 /**
  * This is our JUnit test for our verticle.
@@ -26,7 +33,8 @@ import java.util.List;
 @RunWith(VertxUnitRunner.class)
 public class ManageUserVerticleTest {
 
-    private static final String LOCALHOST = "localhost";
+    private static final String APP_HTTP_HOST_KEY = "app.http.host";
+    private static final String DEFAULT_HOST = "localhost";
     private static final String INDEX_PAGE_CONTEXT = "/";
 
     private static final String USER_ID_TO_FIND = "1";
@@ -41,6 +49,7 @@ public class ManageUserVerticleTest {
     private static final String USER_BY_ID_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.USER_BY_ID_SUB_CONTEXT;
 
     private Vertx vertx;
+    private DeploymentOptions options;
 
     /**
      * Before executing our test, let's deploy our verticle.
@@ -53,7 +62,17 @@ public class ManageUserVerticleTest {
     @Before
     public void setUp(TestContext context) throws IOException {
         vertx = Vertx.vertx();
-        vertx.deployVerticle(ManageUserVerticle.class.getName(), context.asyncAssertSuccess());
+
+        if (options == null) {
+            InputStream config = this.getClass().getResourceAsStream("/my-app-test-config.json");
+            String text;
+            try (Scanner scanner = new Scanner(config)) {
+                text = scanner.useDelimiter("\\A").next();
+            }
+            options = new DeploymentOptions().setConfig(new JsonObject(text));
+        }
+
+        vertx.deployVerticle(ManageUserVerticle.class.getName(), options, context.asyncAssertSuccess());
     }
 
     /**
@@ -78,8 +97,8 @@ public class ManageUserVerticleTest {
         // message. Then, we call the `complete` method on the async handler to declare this async (and here the test) done.
         // Notice that the assertions are made on the 'context' object and are not Junit assert. This ways it manage the
         // async aspect of the test the right way.
-        vertx.createHttpClient().getNow(ManageUserVerticle.HTTP_PORT,
-                LOCALHOST,
+        vertx.createHttpClient().getNow(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
+                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
                 INDEX_PAGE_CONTEXT,
                 response -> response.handler(body -> {
                     context.assertTrue(body.toString().contains(INDEX_PAGE_TITLE));
@@ -106,14 +125,16 @@ public class ManageUserVerticleTest {
     @Test
     public void getAllUsers(TestContext context) {
         Async async = context.async();
-        vertx.createHttpClient().get(ManageUserVerticle.HTTP_PORT, LOCALHOST, GET_ALL_USERS_WEB_API_URL)
+        vertx.createHttpClient().get(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
+                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                GET_ALL_USERS_WEB_API_URL)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), HttpStatusCodeEnum.OK.getStatusCode());
                     context.assertTrue(response.headers().get(ManageUserVerticle.HEADER_CONTENT_TYPE).contains(ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8));
                     response.bodyHandler(body -> {
                         //Just test decode
-                        Json.decodeValue(body.toString(), List.class);
+                        context.assertTrue(!Json.decodeValue(body.toString(), List.class).isEmpty());
                         async.complete();
                     }).exceptionHandler(defineThrowableHandler(context));
                 })
@@ -123,7 +144,9 @@ public class ManageUserVerticleTest {
     @Test
     public void getUserById(TestContext context) {
         Async async = context.async();
-        vertx.createHttpClient().get(ManageUserVerticle.HTTP_PORT, LOCALHOST, USER_BY_ID_WEB_API_URL)
+        vertx.createHttpClient().get(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
+                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                USER_BY_ID_WEB_API_URL)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_LENGTH, Integer.toString(USER_ID_TO_FIND.length()))
                 .handler(response -> {
@@ -137,7 +160,9 @@ public class ManageUserVerticleTest {
     @Test
     public void deleteUserBySuccessfulyId(TestContext context) {
         Async async = context.async();
-        vertx.createHttpClient().delete(ManageUserVerticle.HTTP_PORT, LOCALHOST, USER_BY_ID_WEB_API_URL)
+        vertx.createHttpClient().delete(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
+                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                USER_BY_ID_WEB_API_URL)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_LENGTH, Integer.toString(USER_ID_TO_FIND.length()))
                 .handler(response -> {
@@ -178,7 +203,9 @@ public class ManageUserVerticleTest {
     }
 
     private void manageUser(Buffer fileContent, String operationURL, Handler<HttpClientResponse> clientResponseHandler) {
-        vertx.createHttpClient().post(ManageUserVerticle.HTTP_PORT, LOCALHOST, operationURL)
+        vertx.createHttpClient().post(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
+                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                operationURL)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
                 .putHeader(ManageUserVerticle.HEADER_CONTENT_LENGTH, Integer.toString(fileContent.toString().length()))
                 .handler(clientResponseHandler)
@@ -219,7 +246,7 @@ public class ManageUserVerticleTest {
     }
 
     private Handler<Buffer> editUserBodyHandler(Async async) {
-        return body -> {async.complete();};
+        return body -> async.complete();
     }
 
     private Handler<Throwable> defineThrowableHandler(TestContext context) {

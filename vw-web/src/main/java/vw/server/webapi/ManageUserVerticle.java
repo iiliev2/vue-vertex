@@ -7,6 +7,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -16,7 +17,8 @@ import java.util.*;
 
 public class ManageUserVerticle extends AbstractVerticle {
 
-    static final int HTTP_PORT = 23000;
+    static final int DEFAULT_HTTP_PORT_VALUE = 1;
+    static final String HTTP_PORT_KEY = "http.port";
 
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
 
@@ -36,10 +38,20 @@ public class ManageUserVerticle extends AbstractVerticle {
     private static final String SERVER_STARTED_OK_MESSAGE = "%s is up and running on HTTP protocol and port %d!%n";
     private static final String SERVER_FAILED_MESSAGE = "%s failed to run on HTTP protocol and port %d! Cause is %s";
 
+    private MongoClient mongoClient;
+
     @Override
     public void start(Future<Void> startFuture) {
+        // Create a Mongo client
+        mongoClient = MongoClient.createShared(vertx, config());
+
         //Define web api restful api handlers and start http server
         startWebApp((http) -> completeStartupHandler(http, startFuture));
+    }
+
+    @Override
+    public void stop() throws Exception {
+        mongoClient.close();
     }
 
     /**
@@ -60,7 +72,7 @@ public class ManageUserVerticle extends AbstractVerticle {
                 .createHttpServer(options)
                 .requestHandler(applicationRouter::accept)
                 .listen(
-                        HTTP_PORT,
+                        config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
                         next
                 );
     }
@@ -73,10 +85,10 @@ public class ManageUserVerticle extends AbstractVerticle {
     private void completeStartupHandler(AsyncResult<HttpServer> http, Future<Void> startFuture) {
         if (http.succeeded()) {
             startFuture.complete();
-            System.out.printf(SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), HTTP_PORT);
+            System.out.printf(SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE));
         } else {
             startFuture.fail(http.cause());
-            System.err.printf(SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), HTTP_PORT, http.cause());
+            System.err.printf(SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause());
         }
     }
 
@@ -91,7 +103,7 @@ public class ManageUserVerticle extends AbstractVerticle {
         applicationRouter.route(HttpMethod.PUT, REST_API_CONTEXT_PATTERN).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
-        applicationRouter.mountSubRouter(USER_WEB_API_CONTEXT, new ManageUserRestController(vertx).getRestAPIRouter());
+        applicationRouter.mountSubRouter(USER_WEB_API_CONTEXT, new ManageUserRestController(vertx, mongoClient).getRestAPIRouter());
 
         //Create handler for static resources
         //Map application root context to webroot folder
