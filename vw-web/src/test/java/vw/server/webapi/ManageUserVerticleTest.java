@@ -29,6 +29,7 @@ import static vw.server.webapi.ManageUserVerticle.HTTP_PORT_KEY;
 /**
  * This is our JUnit test for our verticle.
  * The test uses vertx-unit, so we declare a custom runner.
+ * TODO this is ManageUserRestControllerTest, but we can live with this for now!
  */
 @RunWith(VertxUnitRunner.class)
 public class ManageUserVerticleTest {

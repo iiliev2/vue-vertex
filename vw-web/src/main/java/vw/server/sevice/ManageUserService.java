@@ -11,6 +11,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * TODO All JDBC operation should work with DB. Now only getAllUsers works with DB!
+ */
 public class ManageUserService {
 
     private static final String INITIAL_USER_ID = "1";
@@ -23,7 +26,7 @@ public class ManageUserService {
     public ManageUserService(MongoClient mongoClient) {
         this.mongoClient = mongoClient;
 
-        //setMockupInitialData();
+        setMockupInitialData();
     }
 
     /**
