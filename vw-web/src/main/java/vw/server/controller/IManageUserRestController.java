@@ -1,12 +1,14 @@
 package vw.server.controller;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import vw.server.common.HttpStatusCodeEnum;
 import vw.server.webapi.ManageUserVerticle;
 
-import javax.annotation.PreDestroy;
+import java.util.function.Consumer;
 
 public interface IManageUserRestController {
 
@@ -15,9 +17,6 @@ public interface IManageUserRestController {
     String ADD_USER_SUB_CONTEXT = "/add";
     String EDIT_USER_SUB_CONTEXT = "/edit";
     String GET_ALL_USERS_SUB_CONTEXT = "/getAll";
-
-    @PreDestroy
-    void destroy();
 
     /**
      * Restful service, that retrieves all users
@@ -48,21 +47,5 @@ public interface IManageUserRestController {
      * @param routingContext vertx delete restAPIRouter routing context for restful web api
      */
     void deleteUserById(RoutingContext routingContext);
-
-    Router getRestAPIRouter();
-
-    default void sendError(HttpStatusCodeEnum statusCode, HttpServerResponse response) {
-        response
-                .setStatusCode(statusCode.getStatusCode())
-                .end();
-    }
-
-    default void sendSuccess(HttpStatusCodeEnum statusCode, HttpServerResponse response, String responseContent) {
-        response
-                .setStatusCode(statusCode.getStatusCode())
-                .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
-                .end(responseContent);
-    }
-
 
 }

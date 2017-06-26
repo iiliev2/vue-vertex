@@ -1,5 +1,7 @@
 package vw.server.sevice;
 
+import io.vertx.core.Future;
+import io.vertx.core.json.Json;
 import vw.common.dto.UserDTO;
 
 import java.util.Collection;
@@ -7,11 +9,12 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * This class is used for mocking purposes, only.
  */
-public class MockManageUserService implements IManageUserService<Void, Collection<UserDTO>>{
+public class MockManageUserService implements IManageUserService{
 
     private static final String INITIAL_USER_ID = "1";
 
@@ -39,36 +42,49 @@ public class MockManageUserService implements IManageUserService<Void, Collectio
      * @param user to be added to users map
      */
     private void addUserToPersistence(UserDTO user) {
-        users.put(user.getId(), user);
+        users.put(user.getUserId(), user);
     }
 
     @Override
-    public Collection<UserDTO> getAllUsers(Void handler) {
-        return users.values();
+    public Future<Collection<String>> getAllUsers() {
+        Future<Collection<String>> result = Future.future();
+        result.complete(users.values().stream().map(Json::encodePrettily).collect(Collectors.toList()));
+
+        return result;
     }
 
     @Override
-    public UserDTO getUserById(String userID) {
-        return users.getOrDefault(userID, null);
+    public Future<Optional<String>> getUserById(String userID) {
+        Future<Optional<String>> result = Future.future();
+        UserDTO user = users.getOrDefault(userID, null);
+        if(user == null){
+            result.complete(Optional.empty());
+        } else {
+            result.complete(Optional.of(Json.encodePrettily(user)));
+        }
+
+        return result;
     }
 
     @Override
-    public UserDTO createUser(UserDTO userDTO) {
+    public Future<Boolean> createUser(UserDTO userDTO) {
+        Future<Boolean> result = Future.future();
         Optional<String> maxUserId = users.keySet().stream().max(Comparator.naturalOrder());
-        userDTO.setId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(INITIAL_USER_ID));
-        users.put(userDTO.getId(), userDTO);
+        userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(INITIAL_USER_ID));
+        users.put(userDTO.getUserId(), userDTO);
+        result.complete(true);
 
-        return userDTO;
+        return result;
     }
 
     @Override
     public UserDTO updateUser(UserDTO userDTO) {
-        UserDTO oldUserVersion = users.get(userDTO.getId());
+        UserDTO oldUserVersion = users.get(userDTO.getUserId());
         if (oldUserVersion == null) {
             return null;
         } else {
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
-            boolean isUpdated = (users.replace(userDTO.getId(), userDTO) != null);
+            boolean isUpdated = (users.replace(userDTO.getUserId(), userDTO) != null);
 
             return (isUpdated ? userDTO : null);
         }

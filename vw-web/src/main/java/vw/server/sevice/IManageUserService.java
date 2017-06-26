@@ -1,14 +1,23 @@
 package vw.server.sevice;
 
+import io.vertx.core.Future;
 import vw.common.dto.UserDTO;
 
-public interface IManageUserService<T, E> {
+import java.util.Collection;
+import java.util.Optional;
+
+public interface IManageUserService {
+
+    /**
+     * Close persistence container connections
+     */
+    default void destroy(){
+    };
 
     /**
      * Retrieves all users from persistence
-     * @param handler return all users or failure cause
      */
-    E getAllUsers(T handler);
+    Future<Collection<String>> getAllUsers();
 
     /**
      * Retrieves a user by id from persistence
@@ -16,7 +25,7 @@ public interface IManageUserService<T, E> {
      * @param userID that we search
      * @return found user or null
      */
-    UserDTO getUserById(String userID);
+    Future<Optional<String>> getUserById(String userID);
 
     /**
      * Creates a user in persistence
@@ -24,7 +33,7 @@ public interface IManageUserService<T, E> {
      * @param userDTO user to create
      * @return created user
      */
-    UserDTO createUser(UserDTO userDTO);
+    Future<Boolean> createUser(UserDTO userDTO);
 
     /**
      * Updates a user in persistence

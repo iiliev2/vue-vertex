@@ -7,7 +7,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -17,12 +16,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import vw.common.dto.UserDTO;
 import vw.server.common.HttpStatusCodeEnum;
-import vw.server.controller.ManageMongoUserRestController;
+import vw.server.common.IOUtils;
+import vw.server.controller.ManageUserRestController;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.Scanner;
 
 import static vw.server.webapi.ManageUserVerticle.DEFAULT_HTTP_PORT_VALUE;
 import static vw.server.webapi.ManageUserVerticle.HTTP_PORT_KEY;
@@ -45,10 +43,10 @@ public class ManageUserVerticleTest {
     private static final String SIMPLE_UPDATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_edition.json";
 
     private static final String INDEX_PAGE_TITLE = "<title>App</title>";
-    private static final String ADD_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.ADD_USER_SUB_CONTEXT;
-    private static final String EDIT_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.EDIT_USER_SUB_CONTEXT;
-    private static final String GET_ALL_USERS_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.GET_ALL_USERS_SUB_CONTEXT;
-    private static final String USER_BY_ID_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.USER_BY_ID_SUB_CONTEXT;
+    private static final String ADD_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.ADD_USER_SUB_CONTEXT;
+    private static final String EDIT_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.EDIT_USER_SUB_CONTEXT;
+    private static final String GET_ALL_USERS_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.GET_ALL_USERS_SUB_CONTEXT;
+    private static final String USER_BY_ID_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.USER_BY_ID_SUB_CONTEXT;
 
     private Vertx vertx;
     private DeploymentOptions options;
@@ -66,12 +64,7 @@ public class ManageUserVerticleTest {
         vertx = Vertx.vertx();
 
         if (options == null) {
-            InputStream config = this.getClass().getResourceAsStream("/my-app-test-config.json");
-            String text;
-            try (Scanner scanner = new Scanner(config)) {
-                text = scanner.useDelimiter("\\A").next();
-            }
-            options = new DeploymentOptions().setConfig(new JsonObject(text));
+            options = IOUtils.loadFileInJsonFormat("/my-app-test-config.json", this.getClass());
         }
 
         vertx.deployVerticle(ManageUserVerticle.class.getName(), options, context.asyncAssertSuccess());
@@ -233,7 +226,7 @@ public class ManageUserVerticleTest {
             context.assertEquals(outputUser.getSurname(), inputUser.getSurname());
             context.assertEquals(outputUser.getLastName(), inputUser.getLastName());
             context.assertEquals(outputUser.getVersion(), inputUser.getVersion());
-            context.assertNotNull(outputUser.getId());
+            context.assertNotNull(outputUser.getUserId());
             async.complete();
         };
     }

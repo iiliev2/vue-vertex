@@ -1,5 +1,7 @@
 package vw.common.dto;
 
+import io.vertx.core.json.JsonObject;
+
 import java.time.Instant;
 
 public class UserDTO extends GenericDTO {
@@ -22,7 +24,7 @@ public class UserDTO extends GenericDTO {
     }
 
     public UserDTO(String id, Long version, String firstName, String surname, String lastName) {
-        this.setId(id);
+        this.setUserId(id);
         this.setVersion(version);
 
         this.firstName = firstName;
@@ -73,5 +75,22 @@ public class UserDTO extends GenericDTO {
                 ", lastName='" + lastName + '\'' +
                 '}' +
                 super.toString();
+    }
+
+    public JsonObject toJsonObject(){
+        return new JsonObject()
+                .put("userId", this.getUserId())
+                .put("version", this.getVersion())
+                .put("createdBy", this.getCreatedBy())
+                .put("editedBy", this.getEditedBy())
+                .put("creationDatetime", this.getCreationDatetime())
+                .put("editionDatetime", this.getEditionDatetime())
+                .put("firstName", this.getFirstName())
+                .put("surname", this.getSurname())
+                .put("lastName", this.getLastName());
+    }
+
+    public String toJsonString(){
+        return toJsonObject().encodePrettily();
     }
 }

@@ -7,14 +7,11 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import vw.server.controller.IManageUserRestController;
-import vw.server.factory.ManageUserRestControllerFactory;
+import vw.server.controller.ManageUserRestController;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +22,6 @@ public class ManageUserVerticle extends AbstractVerticle {
 
     static final int DEFAULT_HTTP_PORT_VALUE = 1;
     static final String HTTP_PORT_KEY = "http.port";
-    static final String DB_TYPE_KEY = "db.type";
 
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
 
@@ -46,11 +42,10 @@ public class ManageUserVerticle extends AbstractVerticle {
     private static final String SERVER_FAILED_MESSAGE = "%s failed to run on HTTP protocol and port %d! Cause is %s";
 
 
-    private IManageUserRestController manageUserRestController;
+    private ManageUserRestController manageUserRestController;
 
     @Override
     public void start(Future<Void> startFuture) {
-
         //Define web api restful api handlers and start http server
         startWebApp((http) -> completeStartupHandler(http, startFuture));
     }
@@ -109,7 +104,7 @@ public class ManageUserVerticle extends AbstractVerticle {
         applicationRouter.route(HttpMethod.PUT, REST_API_CONTEXT_PATTERN).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
-        manageUserRestController = ManageUserRestControllerFactory.getController(config().getString(DB_TYPE_KEY), vertx, config());
+        manageUserRestController = new ManageUserRestController(vertx, config());
         applicationRouter.mountSubRouter(USER_WEB_API_CONTEXT, manageUserRestController.getRestAPIRouter());
 
         //Create handler for static resources
