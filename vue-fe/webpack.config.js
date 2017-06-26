@@ -4,12 +4,11 @@ var webpack = require('webpack');
 
 const PATHS = {
 	build : path.join(__dirname, "..", "vw-web", 'target', 'classes',
-			'META-INF', 'resources', 'webjars', packageJSON.name,
-			packageJSON.version)
+			'WEB-INF', 'jsbundles')
 };
 
 module.exports = {
-	entry : './app/index.js',
+	entry : './src/main/js/index.js',
 
 	devServer : {
 		inline : true,
@@ -18,8 +17,36 @@ module.exports = {
 
 	output : {
 		path : PATHS.build,
-		publicPath : '/tmp/',
+		publicPath : '/',
 		filename : 'app-bundle.js'
+	},
+	module : {
+		rules : [
+		// process *.vue files using vue-loader
+		{
+			test : /\.vue$/,
+			loader : 'vue-loader'
+		},
+		// process *.js files using babel-loader
+		// the exclude pattern is important so that we don't
+		// apply babel transform to all the dependencies!
+		{
+			test : /\.js$/,
+			exclude : /(node_modules|bower_components)/,
+			use : {
+				loader : 'babel-loader',
+				options : {
+					presets : [ 'es2015' ],
+					plugins : [ 'transform-runtime' ]
+				}
+			}
+		} ]
+	},
+
+	resolve : {
+		alias : {
+			vue : 'vue/dist/vue.js'
+		}
 	}
 
 };

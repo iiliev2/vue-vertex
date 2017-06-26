@@ -24,8 +24,8 @@
 							<goal>install-node-and-npm</goal>
 						</goals>
 						<configuration>
-							<nodeVersion>v4.2.1</nodeVersion>
-							<npmVersion>3.5.3</npmVersion>
+							<nodeVersion>v6.11.0</nodeVersion>
+							<npmVersion>5.0.3</npmVersion>
 						</configuration>
 					</execution>
 
@@ -49,18 +49,35 @@
 							<arguments>run build</arguments>
 						</configuration>
 					</execution>
-<!-- 
+
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<executions>
+
 					<execution>
-						<id>npm run dev</id>
+						<id>copy-frontend-test</id>
+						<phase>process-resources</phase>
 						<goals>
-							<goal>npm</goal>
+							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<arguments>run dev</arguments>
+							<outputDirectory>${basedir}/../vw-web/src/test/resources/WEB-INF</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}</directory>
+									<includes>
+										<include>index.html</include>
+									</includes>
+								</resource>
+							</resources>
 						</configuration>
-					</execution> -->
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
