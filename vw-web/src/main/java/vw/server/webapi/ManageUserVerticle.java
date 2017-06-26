@@ -7,18 +7,25 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
+import vw.server.controller.IManageUserRestController;
+import vw.server.factory.ManageUserRestControllerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ManageUserVerticle extends AbstractVerticle {
 
     static final int DEFAULT_HTTP_PORT_VALUE = 1;
     static final String HTTP_PORT_KEY = "http.port";
+    static final String DB_TYPE_KEY = "db.type";
 
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
 
@@ -26,8 +33,8 @@ public class ManageUserVerticle extends AbstractVerticle {
     private static final String REST_API_CONTEXT_PATTERN = "/api/*";
     static final String USER_WEB_API_CONTEXT = "/api/user";
 
-    static final String HEADER_CONTENT_TYPE = "content-type";
-    static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";
+    public static final String HEADER_CONTENT_TYPE = "content-type";
+    public static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";
     static final String HEADER_CONTENT_LENGTH = "content-length";
     private static final String HEADER_X_REQUESTED_WITH = "x-requested-with";
     private static final String HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
@@ -38,12 +45,11 @@ public class ManageUserVerticle extends AbstractVerticle {
     private static final String SERVER_STARTED_OK_MESSAGE = "%s is up and running on HTTP protocol and port %d!%n";
     private static final String SERVER_FAILED_MESSAGE = "%s failed to run on HTTP protocol and port %d! Cause is %s";
 
-    private MongoClient mongoClient;
+
+    private IManageUserRestController manageUserRestController;
 
     @Override
     public void start(Future<Void> startFuture) {
-        // Create a Mongo client
-        mongoClient = MongoClient.createShared(vertx, config());
 
         //Define web api restful api handlers and start http server
         startWebApp((http) -> completeStartupHandler(http, startFuture));
@@ -51,7 +57,7 @@ public class ManageUserVerticle extends AbstractVerticle {
 
     @Override
     public void stop() throws Exception {
-        mongoClient.close();
+        manageUserRestController.destroy();
     }
 
     /**
@@ -103,7 +109,8 @@ public class ManageUserVerticle extends AbstractVerticle {
         applicationRouter.route(HttpMethod.PUT, REST_API_CONTEXT_PATTERN).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
-        applicationRouter.mountSubRouter(USER_WEB_API_CONTEXT, new ManageUserRestController(vertx, mongoClient).getRestAPIRouter());
+        manageUserRestController = ManageUserRestControllerFactory.getController(config().getString(DB_TYPE_KEY), vertx, config());
+        applicationRouter.mountSubRouter(USER_WEB_API_CONTEXT, manageUserRestController.getRestAPIRouter());
 
         //Create handler for static resources
         //Map application root context to webroot folder

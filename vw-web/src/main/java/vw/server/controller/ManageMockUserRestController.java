@@ -1,32 +1,29 @@
-package vw.server.webapi;
+package vw.server.controller;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
-import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import vw.common.dto.UserDTO;
 import vw.server.common.HttpStatusCodeEnum;
-import vw.server.sevice.ManageUserService;
+import vw.server.sevice.MockManageUserService;
 
-public class ManageUserRestController {
-
-    private static final String USER_ID = "userID";
-    static final String USER_BY_ID_SUB_CONTEXT = "/:" + USER_ID;
-    static final String ADD_USER_SUB_CONTEXT = "/add";
-    static final String EDIT_USER_SUB_CONTEXT = "/edit";
-    static final String GET_ALL_USERS_SUB_CONTEXT = "/getAll";
+public class ManageMockUserRestController implements IManageUserRestController {
 
     private final Router restAPIRouter;
 
-    private ManageUserService manageUserService;
+    private MockManageUserService manageUserService;
 
-    public ManageUserRestController(Vertx vertx, MongoClient mongoClient) {
+    public ManageMockUserRestController(Vertx vertx) {
         this.restAPIRouter = Router.router(vertx);
-        this.manageUserService = new ManageUserService(mongoClient);
+        this.manageUserService = new MockManageUserService();
 
         configure();
+    }
+
+    @Override
+    public void destroy() {
     }
 
     private void configure() {
@@ -38,26 +35,15 @@ public class ManageUserRestController {
         restAPIRouter.delete(USER_BY_ID_SUB_CONTEXT).handler(this::deleteUserById);
     }
 
-    /**
-     * Restful service, that retrieves all users
-     * @param routingContext vertx get all users restAPIRouter routing context for restful web api
-     */
-    private void getAllUsers(RoutingContext routingContext) {
-        manageUserService.getAllUsers(r -> {
-            if(r.succeeded()){
-                sendSuccess(HttpStatusCodeEnum.OK, routingContext.response(), Json.encodePrettily(r.result()));
-            } else {
-                sendError(HttpStatusCodeEnum.INTERNAL_SERVER_ERROR, routingContext.response());
-                r.cause().printStackTrace();
-            }
-        });
+    @Override
+    public void getAllUsers(RoutingContext routingContext) {
+        sendSuccess(HttpStatusCodeEnum.OK,
+                                routingContext.response(),
+                                Json.encodePrettily(manageUserService.getAllUsers(null)));
     }
 
-    /**
-     * Restful service, that retrieves a user by id
-     * @param routingContext vertx get restAPIRouter routing context for restful web api
-     */
-    private void getUserById(RoutingContext routingContext) {
+    @Override
+    public void getUserById(RoutingContext routingContext) {
         String userID = routingContext.request().getParam(USER_ID);
         HttpServerResponse response = routingContext.response();
         if (userID == null || userID.isEmpty()) {
@@ -74,11 +60,8 @@ public class ManageUserRestController {
         }
     }
 
-    /**
-     * Restful service, that creates a user
-     * @param routingContext vertx create restAPIRouter routing context for restful web api
-     */
-    private void addUser(RoutingContext routingContext) {
+    @Override
+    public void addUser(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
         String requestBody = routingContext.getBodyAsString();
         if (requestBody == null) {
@@ -91,11 +74,8 @@ public class ManageUserRestController {
         }
     }
 
-    /**
-     * Restful service, that updates a user
-     * @param routingContext vertx update restAPIRouter routing context for restful web api
-     */
-    private void editUser(RoutingContext routingContext) {
+    @Override
+    public void editUser(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
         String requestBody = routingContext.getBodyAsString();
         if (requestBody == null) {
@@ -113,11 +93,8 @@ public class ManageUserRestController {
         }
     }
 
-    /**
-     * Restful service, that deletes a user by id
-     * @param routingContext vertx delete restAPIRouter routing context for restful web api
-     */
-    private void deleteUserById(RoutingContext routingContext) {
+    @Override
+    public void deleteUserById(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
         String userID = routingContext.request().getParam(USER_ID);
         if (userID == null) {
@@ -128,21 +105,8 @@ public class ManageUserRestController {
         }
     }
 
-    private void sendError(HttpStatusCodeEnum statusCode, HttpServerResponse response) {
-        response
-                .setStatusCode(statusCode.getStatusCode())
-                .end();
-    }
-
-    private void sendSuccess(HttpStatusCodeEnum statusCode, HttpServerResponse response, String responseContent) {
-        response
-                .setStatusCode(statusCode.getStatusCode())
-                .putHeader(ManageUserVerticle.HEADER_CONTENT_TYPE, ManageUserVerticle.APPLICATION_JSON_CHARSET_UTF_8)
-                .end(responseContent);
-    }
-
+    @Override
     public Router getRestAPIRouter() {
         return restAPIRouter;
     }
-
 }

@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import vw.common.dto.UserDTO;
 import vw.server.common.HttpStatusCodeEnum;
+import vw.server.controller.ManageMongoUserRestController;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,10 +45,10 @@ public class ManageUserVerticleTest {
     private static final String SIMPLE_UPDATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_edition.json";
 
     private static final String INDEX_PAGE_TITLE = "<title>App</title>";
-    private static final String ADD_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.ADD_USER_SUB_CONTEXT;
-    private static final String EDIT_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.EDIT_USER_SUB_CONTEXT;
-    private static final String GET_ALL_USERS_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.GET_ALL_USERS_SUB_CONTEXT;
-    private static final String USER_BY_ID_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageUserRestController.USER_BY_ID_SUB_CONTEXT;
+    private static final String ADD_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.ADD_USER_SUB_CONTEXT;
+    private static final String EDIT_USER_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.EDIT_USER_SUB_CONTEXT;
+    private static final String GET_ALL_USERS_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.GET_ALL_USERS_SUB_CONTEXT;
+    private static final String USER_BY_ID_WEB_API_URL = ManageUserVerticle.USER_WEB_API_CONTEXT + ManageMongoUserRestController.USER_BY_ID_SUB_CONTEXT;
 
     private Vertx vertx;
     private DeploymentOptions options;
