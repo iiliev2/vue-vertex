@@ -7,7 +7,7 @@ public class GenericDTO implements Serializable{
 
   	private static final long serialVersionUID = 4975400837194252596L;
 
-	private String userId;
+	private String id;
 
     private Long version;
 
@@ -23,7 +23,7 @@ public class GenericDTO implements Serializable{
     }
 
     public GenericDTO(String id, Long version, String createdBy, String editedBy, Instant creationDatetime, Instant editionDatetime) {
-        this.userId = id;
+        this.id = id;
         this.version = version;
         this.createdBy = createdBy;
         this.editedBy = editedBy;
@@ -31,12 +31,12 @@ public class GenericDTO implements Serializable{
         this.editionDatetime = editionDatetime;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getId() {
+        return id;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String id) {
+        this.id = id;
     }
 
     public Long getVersion() {
@@ -82,7 +82,7 @@ public class GenericDTO implements Serializable{
     @Override
     public String toString() {
         return "GenericDTO{" +
-                "userId=" + userId +
+                "id=" + id +
                 ", version=" + version +
                 ", createdBy='" + createdBy + '\'' +
                 ", editedBy='" + editedBy + '\'' +

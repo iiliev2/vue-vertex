@@ -2,30 +2,32 @@ package vw.server.launcher;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import vw.server.common.IOUtils;
 import vw.server.webapi.ManageUserVerticle;
 
-import java.io.InputStream;
 import java.util.Objects;
-import java.util.Scanner;
+
+import static vw.server.common.IResourceBundleConstants.VERTICLE_DEPLOYED_SUCCESSFULY_MSG;
+import static vw.server.common.IResourceBundleConstants.VERTICLE_FAILED_TO_DEPLOY;
 
 public class VertexLauncher {
 
     private static final Vertx VERTX = Vertx.vertx();
 
     private static final String DEFAULT_CONFIGURATION = "my-app-config.json";
-    private static final String VERTICLE_DEPLOYED_SUCCESSFULY_MSG = "Verticle with id : %s is successfuly deployed!%n";
-    private static final String VERTICLE_FAILED_TO_DEPLOY = "Failed to deploy verticle %s!";
     private static final String CONF_ARG = "-conf";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageUserVerticle.class);
 
     public static void main(String[] args) {
         String verticleYoDeploy = ManageUserVerticle.class.getName();
         VERTX.deployVerticle(verticleYoDeploy, getDeploymentOptions(args), res -> {
             if (res.succeeded()) {
-                System.out.printf(VERTICLE_DEPLOYED_SUCCESSFULY_MSG, res.result());
+                LOGGER.info(String.format(VERTICLE_DEPLOYED_SUCCESSFULY_MSG, res.result()));
             } else {
-                System.err.printf(VERTICLE_FAILED_TO_DEPLOY, verticleYoDeploy);
+                LOGGER.error(String.format(VERTICLE_FAILED_TO_DEPLOY, verticleYoDeploy));
             }
         });
 
@@ -39,7 +41,7 @@ public class VertexLauncher {
             appConfiguration = DEFAULT_CONFIGURATION;
         }
 
-        return IOUtils.loadFileInJsonFormat(appConfiguration, VertexLauncher.class);
+        return IOUtils.loadConfiguration(appConfiguration, VertexLauncher.class.getClassLoader());
     }
 
 }

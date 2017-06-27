@@ -11,11 +11,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * TODO All JDBC operation should work with DB. Now only getAllUsers works with DB!
+ * Repository interface for users. MongoDB implementation.
  */
 public class MongoManageUserService implements IManageUserService{
 
     private static final String COLLECTION = "user";
+    private static final String USER_ID = "_id";
 
     private MongoClient mongoClient;
 
@@ -29,12 +30,20 @@ public class MongoManageUserService implements IManageUserService{
     }
 
     @Override
-    public Future<Collection<String>> getAllUsers() {
-        Future<Collection<String>> result = Future.future();
+    public Future<Collection<UserDTO>> getAllUsers() {
+        Future<Collection<UserDTO>> result = Future.future();
         mongoClient.find(COLLECTION, new JsonObject(), findAllResultHandler -> {
             if (findAllResultHandler.succeeded()) {
-                Collection<JsonObject> users = findAllResultHandler.result();
-                result.complete(users.stream().map(JsonObject::encodePrettily).collect(Collectors.toList()));
+                Collection<UserDTO> users = findAllResultHandler.result().stream().map(
+                        user -> new UserDTO(
+                                user.getValue("_id").toString(),
+                                user.getLong("version"),
+                                user.getString("firstName"),
+                                user.getString("surname"),
+                                user.getString("lastName"))
+                ).collect(Collectors.toList());
+
+                result.complete(users);
             } else {
                 result.fail(findAllResultHandler.cause());
             }
@@ -46,7 +55,7 @@ public class MongoManageUserService implements IManageUserService{
     @Override
     public Future<Optional<String>> getUserById(String userID) {
         Future<Optional<String>> result = Future.future();
-        mongoClient.findOne(COLLECTION, new JsonObject().put("id", userID), null, findUserResultHandler -> {
+        mongoClient.findOne(COLLECTION, new JsonObject().put(USER_ID, userID), null, findUserResultHandler -> {
             if (findUserResultHandler.succeeded()) {
                 JsonObject jsonUser = findUserResultHandler.result();
                 if(jsonUser == null || jsonUser.isEmpty()){
@@ -79,12 +88,32 @@ public class MongoManageUserService implements IManageUserService{
     }
 
     @Override
-    public UserDTO updateUser(UserDTO userDTO) {
-        return null;
+    public Future<Boolean> updateUser(UserDTO userDTO) {
+        Future<Boolean> result = Future.future();
+        JsonObject query = new JsonObject().put(USER_ID, userDTO.getId());
+        mongoClient.findOneAndReplace(COLLECTION, query, userDTO.toJsonObject(), res -> {
+            if (res.succeeded()) {
+                result.complete(true);
+            } else {
+                result.fail(res.cause());
+            }
+        });
+
+        return result;
     }
 
     @Override
-    public void deleteUserById(String userID) {
+    public Future<Boolean> deleteUserById(String userID) {
+        Future<Boolean> result = Future.future();
+        JsonObject query = new JsonObject().put(USER_ID, userID);
+        mongoClient.findOneAndDelete(COLLECTION, query, res -> {
+            if (res.succeeded()) {
+                result.complete(true);
+            } else {
+                result.fail(res.cause());
+            }
+        });
 
+        return result;
     }
 }

@@ -1,22 +1,14 @@
 package vw.server.controller;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import vw.server.common.HttpStatusCodeEnum;
-import vw.server.webapi.ManageUserVerticle;
 
-import java.util.function.Consumer;
-
+/**
+ * User restful web api controller interface. It exposes CRUD operations.
+ */
 public interface IManageUserRestController {
 
     String USER_ID = "userID";
     String USER_BY_ID_SUB_CONTEXT = "/:" + USER_ID;
-    String ADD_USER_SUB_CONTEXT = "/add";
-    String EDIT_USER_SUB_CONTEXT = "/edit";
-    String GET_ALL_USERS_SUB_CONTEXT = "/getAll";
 
     /**
      * Restful service, that retrieves all users

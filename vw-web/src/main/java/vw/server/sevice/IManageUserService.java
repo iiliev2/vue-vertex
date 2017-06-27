@@ -6,6 +6,9 @@ import vw.common.dto.UserDTO;
 import java.util.Collection;
 import java.util.Optional;
 
+/**
+ * Repository interface for users
+ */
 public interface IManageUserService {
 
     /**
@@ -15,9 +18,11 @@ public interface IManageUserService {
     };
 
     /**
-     * Retrieves all users from persistence
+     * Retrieves all users from persistence.
+     *
+     * @return all users as json
      */
-    Future<Collection<String>> getAllUsers();
+    Future<Collection<UserDTO>> getAllUsers();
 
     /**
      * Retrieves a user by id from persistence
@@ -31,20 +36,23 @@ public interface IManageUserService {
      * Creates a user in persistence
      *
      * @param userDTO user to create
-     * @return created user
+     * @return is user created
      */
     Future<Boolean> createUser(UserDTO userDTO);
 
     /**
      * Updates a user in persistence
+     *
      * @param userDTO user to update
-     * @return updated user or null if user does not exists
+     * @return is user updated
      */
-    UserDTO updateUser(UserDTO userDTO);
+    Future<Boolean> updateUser(UserDTO userDTO);
 
     /**
      * Deletes a user by id
+     *
      * @param userID user to be deleted
+     * @return is user deleted
      */
-    void deleteUserById(String userID);
+    Future<Boolean> deleteUserById(String userID);
 }

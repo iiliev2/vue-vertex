@@ -9,10 +9,9 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
- * This class is used for mocking purposes, only.
+ * Repository interface for users. This class is used for mocking purposes, only.
  */
 public class MockManageUserService implements IManageUserService{
 
@@ -42,13 +41,13 @@ public class MockManageUserService implements IManageUserService{
      * @param user to be added to users map
      */
     private void addUserToPersistence(UserDTO user) {
-        users.put(user.getUserId(), user);
+        users.put(user.getId(), user);
     }
 
     @Override
-    public Future<Collection<String>> getAllUsers() {
-        Future<Collection<String>> result = Future.future();
-        result.complete(users.values().stream().map(Json::encodePrettily).collect(Collectors.toList()));
+    public Future<Collection<UserDTO>> getAllUsers() {
+        Future<Collection<UserDTO>> result = Future.future();
+        result.complete(users.values());
 
         return result;
     }
@@ -71,27 +70,33 @@ public class MockManageUserService implements IManageUserService{
         Future<Boolean> result = Future.future();
         Optional<String> maxUserId = users.keySet().stream().max(Comparator.naturalOrder());
         userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(INITIAL_USER_ID));
-        users.put(userDTO.getUserId(), userDTO);
+        users.put(userDTO.getId(), userDTO);
         result.complete(true);
 
         return result;
     }
 
     @Override
-    public UserDTO updateUser(UserDTO userDTO) {
-        UserDTO oldUserVersion = users.get(userDTO.getUserId());
+    public Future<Boolean> updateUser(UserDTO userDTO) {
+        Future<Boolean> result = Future.future();
+        UserDTO oldUserVersion = users.get(userDTO.getId());
         if (oldUserVersion == null) {
-            return null;
+            result.complete(false);
         } else {
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
-            boolean isUpdated = (users.replace(userDTO.getUserId(), userDTO) != null);
-
-            return (isUpdated ? userDTO : null);
+            boolean isUpdated = (users.replace(userDTO.getId(), userDTO) != null);
+            result.complete(isUpdated);
         }
+
+        return result;
     }
 
     @Override
-    public void deleteUserById(String userID) {
-        users.remove(userID);
+    public Future<Boolean> deleteUserById(String userID) {
+        Future<Boolean> result = Future.future();
+        UserDTO removedUser = users.remove(userID);
+        result.complete(removedUser != null);
+
+        return result;
     }
 }

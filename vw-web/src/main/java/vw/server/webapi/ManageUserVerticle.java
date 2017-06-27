@@ -7,6 +7,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -18,35 +20,22 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static vw.server.common.IConfigurationConstants.*;
+import static vw.server.common.IResourceBundleConstants.SERVER_FAILED_MESSAGE;
+import static vw.server.common.IResourceBundleConstants.SERVER_STARTED_OK_MESSAGE;
+import static vw.server.common.IWebApiConstants.*;
+
 public class ManageUserVerticle extends AbstractVerticle {
 
-    static final int DEFAULT_HTTP_PORT_VALUE = 1;
-    static final String HTTP_PORT_KEY = "http.port";
-
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
-
     private static final String STATIC_RESOURCES_CONTEXT = "/*";
-    private static final String REST_API_CONTEXT_PATTERN = "/api/*";
-    static final String USER_WEB_API_CONTEXT = "/api/user";
 
-    public static final String HEADER_CONTENT_TYPE = "content-type";
-    public static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";
-    static final String HEADER_CONTENT_LENGTH = "content-length";
-    private static final String HEADER_X_REQUESTED_WITH = "x-requested-with";
-    private static final String HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-    private static final String HEADER_ORIGIN = "origin";
-    private static final String HEADER_ACCEPT = "accept";
-    private static final String ALLOWED_ORIGIN_PATTERN = "*";
-
-    private static final String SERVER_STARTED_OK_MESSAGE = "%s is up and running on HTTP protocol and port %d!%n";
-    private static final String SERVER_FAILED_MESSAGE = "%s failed to run on HTTP protocol and port %d! Cause is %s";
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageUserVerticle.class);
 
     private ManageUserRestController manageUserRestController;
 
     @Override
     public void start(Future<Void> startFuture) {
-        //Define web api restful api handlers and start http server
         startWebApp((http) -> completeStartupHandler(http, startFuture));
     }
 
@@ -86,10 +75,10 @@ public class ManageUserVerticle extends AbstractVerticle {
     private void completeStartupHandler(AsyncResult<HttpServer> http, Future<Void> startFuture) {
         if (http.succeeded()) {
             startFuture.complete();
-            System.out.printf(SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE));
+            LOGGER.info(String.format(SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE)));
         } else {
             startFuture.fail(http.cause());
-            System.err.printf(SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause());
+            LOGGER.error(String.format(SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause()));
         }
     }
 
@@ -100,12 +89,12 @@ public class ManageUserVerticle extends AbstractVerticle {
                 .allowedMethods(defineAllowedCORSHttpMethods()));
 
         //Store post bodies in rooting context for all api calls
-        applicationRouter.route(HttpMethod.POST, REST_API_CONTEXT_PATTERN).handler(BodyHandler.create());
-        applicationRouter.route(HttpMethod.PUT, REST_API_CONTEXT_PATTERN).handler(BodyHandler.create());
+        applicationRouter.route(HttpMethod.POST, config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN)).handler(BodyHandler.create());
+        applicationRouter.route(HttpMethod.PUT, config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN)).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
         manageUserRestController = new ManageUserRestController(vertx, config());
-        applicationRouter.mountSubRouter(USER_WEB_API_CONTEXT, manageUserRestController.getRestAPIRouter());
+        applicationRouter.mountSubRouter(config().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE), manageUserRestController.getRestAPIRouter());
 
         //Create handler for static resources
         //Map application root context to webroot folder

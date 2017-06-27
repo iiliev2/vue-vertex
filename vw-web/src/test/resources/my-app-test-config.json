@@ -1,6 +1,8 @@
 {
   "app.http.host": "localhost",
-  "http.port": 23001 /*,
+  "http.port": 23001,
+  "web.api.context": "/api/*",
+  "user.web.api.context": "/api/user" /*,
   "db.type": "mongo",
   "db_name": "vertx_test",
   "connection_string": "mongodb://localhost:27017" */
