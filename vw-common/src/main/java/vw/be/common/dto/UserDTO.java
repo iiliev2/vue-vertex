@@ -1,7 +1,6 @@
 package vw.be.common.dto;
 
 import io.vertx.core.json.JsonObject;
-import vw.be.common.dto.GenericDTO;
 
 import java.time.Instant;
 

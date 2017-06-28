@@ -8,7 +8,7 @@ import vw.be.server.sevice.MongoManageUserService;
 
 public class ManageUserServiceFactory {
 
-    private static final String DB_TYPE_KEY = "db.type";
+    public static final String DB_TYPE_KEY = "db.type";
 
     public static IManageUserService getService(Vertx vertx, JsonObject config){
         switch (config.getString(DB_TYPE_KEY, "")) {

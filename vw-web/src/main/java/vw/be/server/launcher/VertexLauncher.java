@@ -41,7 +41,13 @@ public class VertexLauncher {
             appConfiguration = DEFAULT_CONFIGURATION;
         }
 
-        return IOUtils.loadConfiguration(appConfiguration, VertexLauncher.class.getClassLoader());
+        return new DeploymentOptions()
+                .setConfig(
+                        IOUtils.loadConfiguration(
+                                appConfiguration,
+                                VertexLauncher.class.getClassLoader()
+                        )
+                );
     }
 
 }

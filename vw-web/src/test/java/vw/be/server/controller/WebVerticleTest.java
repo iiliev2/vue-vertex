@@ -30,11 +30,12 @@ import static vw.be.server.common.IWebApiConstants.HEADER_CONTENT_TYPE;
 /**
  * This is our JUnit test for our rest api controller.
  * The test uses vertx-unit, so we declare a custom runner.
+ * TODO refactor it to be like ManageUserServiceTest and create test constants interface
  */
 @RunWith(VertxUnitRunner.class)
 public class WebVerticleTest {
 
-    private static final String MY_APP_TEST_CONFIG_FILE = "/my-app-test-config.json";
+    public static final String MY_APP_TEST_CONFIG_FILE = "/my-app-test-config.json";
 
     private static final String INDEX_PAGE_CONTEXT = "/";
 
@@ -61,7 +62,13 @@ public class WebVerticleTest {
         vertx = Vertx.vertx();
 
         if (options == null) {
-            options = IOUtils.loadConfiguration(MY_APP_TEST_CONFIG_FILE, this.getClass());
+            options = new DeploymentOptions()
+                    .setConfig(
+                            IOUtils.loadConfiguration(
+                                    MY_APP_TEST_CONFIG_FILE,
+                                    this.getClass()
+                            )
+                    );
         }
 
         vertx.deployVerticle(WebVerticle.class.getName(), options, context.asyncAssertSuccess());
@@ -173,6 +180,7 @@ public class WebVerticleTest {
     }
 
     private void readJsonFile(TestContext context, Async async, String filename, boolean isCreate) {
+        //TODO refactor it to use IOUtils
         vertx.fileSystem().readFile(filename, result -> {
             if (result.succeeded()) {
                 if (isCreate) {

@@ -17,7 +17,7 @@ public class IOUtils {
      * @param configClass class loader of this class is used
      * @return loaded configuration or default if passed as argument does not exist.
      */
-    public static DeploymentOptions loadConfiguration(String configuration, Class configClass){
+    public static JsonObject loadConfiguration(String configuration, Class configClass){
         InputStream config = configClass.getResourceAsStream(configuration);
 
         return getDeploymentOptions(config);
@@ -29,23 +29,24 @@ public class IOUtils {
      * @param classLoader class loader of this class is used
      * @return loaded configuration or default if passed as argument does not exist.
      */
-    public static DeploymentOptions loadConfiguration(String configuration, ClassLoader classLoader){
+    public static JsonObject loadConfiguration(String configuration, ClassLoader classLoader){
         InputStream config = classLoader.getResourceAsStream(configuration);
 
         return getDeploymentOptions(config);
     }
 
-    private static DeploymentOptions getDeploymentOptions(InputStream config) {
-        DeploymentOptions options = new DeploymentOptions();
+    private static JsonObject getDeploymentOptions(InputStream config) {
+        JsonObject configuration = null;
         if(config != null) {
             String text;
             try (Scanner scanner = new Scanner(config)) {
                 text = scanner.useDelimiter("\\A").next();
             }
-            options.setConfig(new JsonObject(text));
+
+            configuration = new JsonObject(text);
         }
 
-        return options;
+        return (configuration == null ? new JsonObject() : configuration);
     }
 
 }
