@@ -12,3 +12,6 @@
 /**/.idea/
 /**/.idea/**
 *.iml
+/./vertx/
+/**/.vertx/
+/**/.vertx/**
