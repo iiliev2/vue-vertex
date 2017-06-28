@@ -5,7 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import vw.be.server.common.IOUtils;
-import vw.be.server.webapi.ManageUserVerticle;
+import vw.be.server.verticle.WebVerticle;
 
 import java.util.Objects;
 
@@ -19,11 +19,11 @@ public class VertexLauncher {
     private static final String DEFAULT_CONFIGURATION = "my-app-config.json";
     private static final String CONF_ARG = "-conf";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageUserVerticle.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebVerticle.class);
 
     public static void main(String[] args) {
-        String verticleYoDeploy = ManageUserVerticle.class.getName();
-        VERTX.deployVerticle(verticleYoDeploy, getDeploymentOptions(args), res -> {
+        String verticleYoDeploy = WebVerticle.class.getName();
+        VERTX.deployVerticle(verticleYoDeploy, getDeploymentOptions(args).setInstances(10), res -> {
             if (res.succeeded()) {
                 LOGGER.info(String.format(VERTICLE_DEPLOYED_SUCCESSFULY_MSG, res.result()));
             } else {

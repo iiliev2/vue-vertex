@@ -1,4 +1,4 @@
-package vw.be.server.webapi;
+package vw.be.server.verticle;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -25,12 +25,12 @@ import static vw.be.server.common.IResourceBundleConstants.SERVER_FAILED_MESSAGE
 import static vw.be.server.common.IResourceBundleConstants.SERVER_STARTED_OK_MESSAGE;
 import static vw.be.server.common.IWebApiConstants.*;
 
-public class ManageUserVerticle extends AbstractVerticle {
+public class WebVerticle extends AbstractVerticle {
 
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
     private static final String STATIC_RESOURCES_CONTEXT = "/*";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageUserVerticle.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebVerticle.class);
 
     private ManageUserRestController manageUserRestController;
 

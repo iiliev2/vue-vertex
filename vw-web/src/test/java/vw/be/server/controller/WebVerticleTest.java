@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 import vw.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.IOUtils;
-import vw.be.server.webapi.ManageUserVerticle;
+import vw.be.server.verticle.WebVerticle;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +32,7 @@ import static vw.be.server.common.IWebApiConstants.HEADER_CONTENT_TYPE;
  * The test uses vertx-unit, so we declare a custom runner.
  */
 @RunWith(VertxUnitRunner.class)
-public class ManageUserRestControllerTest {
+public class WebVerticleTest {
 
     private static final String MY_APP_TEST_CONFIG_FILE = "/my-app-test-config.json";
 
@@ -64,7 +64,7 @@ public class ManageUserRestControllerTest {
             options = IOUtils.loadConfiguration(MY_APP_TEST_CONFIG_FILE, this.getClass());
         }
 
-        vertx.deployVerticle(ManageUserVerticle.class.getName(), options, context.asyncAssertSuccess());
+        vertx.deployVerticle(WebVerticle.class.getName(), options, context.asyncAssertSuccess());
     }
 
     /**
