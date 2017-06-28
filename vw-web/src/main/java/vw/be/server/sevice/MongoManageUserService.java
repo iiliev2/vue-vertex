@@ -4,7 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
-import vw.common.dto.UserDTO;
+import vw.be.common.dto.UserDTO;
 
 import java.util.Collection;
 import java.util.Optional;

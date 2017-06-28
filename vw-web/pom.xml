@@ -28,14 +28,14 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>vertx.server</groupId>
-			<artifactId>vertex-common</artifactId>
-			<version>3.4.1</version>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-mongo-client</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-mongo-client</artifactId>
+			<groupId>vw.be</groupId>
+			<artifactId>vw-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

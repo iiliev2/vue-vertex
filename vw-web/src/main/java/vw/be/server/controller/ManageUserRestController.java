@@ -8,7 +8,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import vw.common.dto.UserDTO;
+import vw.be.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.factory.ManageUserServiceFactory;
 import vw.be.server.sevice.IManageUserService;

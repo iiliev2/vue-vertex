@@ -14,7 +14,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import vw.common.dto.UserDTO;
+import vw.be.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.IOUtils;
 import vw.be.server.verticle.WebVerticle;

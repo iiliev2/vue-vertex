@@ -1,7 +1,7 @@
 package vw.be.server.sevice;
 
 import io.vertx.core.Future;
-import vw.common.dto.UserDTO;
+import vw.be.common.dto.UserDTO;
 
 import java.util.Collection;
 import java.util.Optional;
