@@ -2,18 +2,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
-		<artifactId>vertex-parent</artifactId>
-		<groupId>vertx.server</groupId>
+		<artifactId>vw-parent</artifactId>
+		<groupId>vw.be</groupId>
 		<version>3.4.1</version>
 		<relativePath>../vw-parent/pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>vertex-web</artifactId>
+	<artifactId>vw-web</artifactId>
 
 	<properties>
 		<!-- the main class -->
-		<exec.mainClass>vw.server.launcher.VertexLauncher</exec.mainClass>
+		<exec.mainClass>vw.be.server.launcher.VertexLauncher</exec.mainClass>
 	</properties>
 
 	<dependencies>

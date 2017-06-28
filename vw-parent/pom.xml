@@ -4,12 +4,12 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>vertx.server</groupId>
-	<artifactId>vertex-parent</artifactId>
+	<groupId>vw.be</groupId>
+	<artifactId>vw-parent</artifactId>
 	<packaging>pom</packaging>
 	<version>3.4.1</version>
 	<modules>
-		<module>../vue-fe</module>
+		<module>../vue-ui-client</module>
 		<module>../vw-web</module>
 		<module>../vw-common</module>
 	</modules>
