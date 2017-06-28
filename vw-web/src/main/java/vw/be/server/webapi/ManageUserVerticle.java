@@ -42,6 +42,7 @@ public class ManageUserVerticle extends AbstractVerticle {
     @Override
     public void stop() throws Exception {
         manageUserRestController.destroy();
+        manageUserRestController = null;
     }
 
     /**
