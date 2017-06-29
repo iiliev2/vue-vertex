@@ -65,7 +65,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${basedir}/../vw-web/src/test/resources/WEB-INF</outputDirectory>
+							<outputDirectory>${basedir}/../vw-web/target/classes/WEB-INF</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${basedir}</directory>
