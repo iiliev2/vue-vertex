@@ -1,12 +1,26 @@
 <template>
-<p>user {{this.$route.params.userid}}</p>
+    <div>
+        <p>user {{this.$route.params.userid}}</p>
+        <router-link :to="'/all_users'" tag="button">All users</router-link>
+        <delete message="Are you sure you want to delete the user?"
+                @delete-accepted="deleteAccepted"
+                @delete-canceleted="deleteCanceled"></delete>
+    </div>
 </template>
 <script>
-export default{
-	watch: {
-	    '$route' (to, from) {
-	    	
-	    }
-	  }
-}
+    import Delete from './Delete.vue'
+    import {router} from '../js/index.js'
+    export default {
+        components: {
+            'delete': Delete
+        },
+        methods: {
+            'deleteAccepted': function () {
+                router.push('/all_users')
+            },
+            'deleteCanceled': function () {
+
+            }
+        }
+    }
 </script>

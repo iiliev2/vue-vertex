@@ -18,7 +18,7 @@ module.exports = {
 	output : {
 		path : PATHS.build,
 		publicPath : '/',
-		filename : 'app-bundle.js'
+		filename : 'jsbundles/app-bundle.js'
 	},
 	module : {
 		rules : [

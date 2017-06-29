@@ -4,7 +4,6 @@ import VueResource from 'vue-resource'
 import App from './../components/App.vue'
 import Allusers from './../components/Allusers.vue'
 import Createuser from './../components/Createuser.vue'
-import Deleteuser from './../components/Deleteuser.vue'
 import Viewuser from './../components/Viewuser.vue'
 Vue.use(VueResource)
 Vue.use(VueRouter)
@@ -12,8 +11,7 @@ Vue.use(VueRouter)
 const routes = [
 	{path: '/all_users', component: Allusers},
 	{path: '/create_user', component: Createuser},
-	{path: '/user/:userid', component: Viewuser},
-	{path: '/delete_user/:userid', component: Deleteuser}	
+	{path: '/user/:userid', component: Viewuser}
 ]
 
 export var router = new VueRouter({
