@@ -9,14 +9,14 @@
 </template>
 <script>
     import Delete from './Delete.vue'
-    import {router} from '../js/index.js'
+    import config from '../js/index.js'
     export default {
         components: {
             'delete': Delete
         },
         methods: {
             'deleteAccepted': function () {
-                router.push('/all_users')
+                config.router.push('/all_users')
             },
             'deleteCanceled': function () {
 

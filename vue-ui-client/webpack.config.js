@@ -8,11 +8,11 @@ const PATHS = {
 };
 
 module.exports = {
-    entry: './src/main/js/index.js',
+    entry: ['./src/main/js/index.js'],
 
     devServer: {
         inline: true,
-        port: 23001
+        port: 23003
     },
 
     output: {
@@ -43,8 +43,14 @@ module.exports = {
             }]
     },
     plugins: [
+        //needed because we cannot run in -p mode, because we cannot
+        //use uglifyjs as it does not support es6
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify('production')
+        }),
+        //needed for axios as es5 does not have the promise api
+        new webpack.ProvidePlugin({
+            Promise: 'es6-promise-promise'
         })
     ]
 };

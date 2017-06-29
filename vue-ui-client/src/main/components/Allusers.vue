@@ -3,15 +3,15 @@
         <table id="allusers">
             <tr v-for="item in items">
                 <td>
-                    <input type="checkbox" v-bind:value="item.id" v-model="checked">
+                    <input type="checkbox" :value="item.id" v-model="checked">
                 </td>
-                <div v-on:click="viewUser(item)">
+                <div @click="viewUser(item)">
                     <td v-for="value in item">{{value}}</td>
                 </div>
             </tr>
         </table>
 
-        <router-link v-bind:to="'/create_user'" tag="button">Create User</router-link>
+        <router-link :to="'/create_user'" tag="button">Create User</router-link>
         <delete v-if="checked.length>0"
                 message="Are you sure you want to delete these users?"
                 @delete-accepted="deleteAccepted"
@@ -21,25 +21,13 @@
 </template>
 
 <script>
-    import {
-        router
-    } from '../js/index.js'
+    import config from '../js/index.js'
     import Delete from './Delete.vue'
+
     export default {
         data() {
             return {
-                items: [{
-                    id: 1,
-                    name: 'Ivan Iliev'
-                },
-                    {
-                        id: 2,
-                        name: 'Pesho Typiq'
-                    }
-                ],
-                viewUser(user) {
-                    router.push('/user/:' + user.id)
-                },
+                items: [],
                 checked: []
             }
         }, components: {
@@ -47,11 +35,28 @@
         },
         methods: {
             'deleteAccepted': function () {
-
+                this.checked = []
+                this.getAllUsers()
             },
             'deleteCanceled': function () {
-
+                this.checked = []
+                this.getAllUsers()
+            },
+            'getAllUsers': function () {
+                this.$http.get('http://localhost:23002/api/user/getAll')
+                    .then(response => {
+                        this.items = response.data;
+                    })
+                    .catch(error => {
+                        this.items = error;
+                    })
+            },
+            'viewUser': function (user) {
+                config.router.push('/user/:' + user.id)
             }
+        },
+        mounted: function () {
+            this.getAllUsers()
         }
     }
 </script>
