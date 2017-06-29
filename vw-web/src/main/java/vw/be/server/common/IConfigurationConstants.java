@@ -7,6 +7,8 @@ public interface IConfigurationConstants {
     String HTTP_PORT_KEY = "http.port";
     int DEFAULT_HTTP_PORT_VALUE = 23000;
 
+    String WEB_ROOT_CONTEXT = "/";
+
     String USER_WEB_API_CONTEXT_KEY = "user.web.api.context";
     String DEFAULT_USER_WEB_API_CONTEXT_VALUE = "/api/user";
     String REST_API_CONTEXT_PATTERN_KEY = "web.api.context";
@@ -18,4 +20,9 @@ public interface IConfigurationConstants {
     String GET_ALL_USERS_SUB_CONTEXT_KEY = "get.all.users.web.api.method";
     String DEFAULT_GET_ALL_USERS_SUB_CONTEXT_VALUE = "/getAll";
 
+    String DB_TYPE_KEY = "db.type";
+    String DB_NAME_KEY = "db_name";
+    String CONNECTION_URL_KEY = "connection_string";
+
+    String MONGO_DB_PROVIDER = "mongo";
 }

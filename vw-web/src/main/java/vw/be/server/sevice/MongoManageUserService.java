@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class MongoManageUserService implements IManageUserService{
 
     private static final String COLLECTION = "user";
-    public static final String USER_ID = "_id";
+    private static final String USER_ID = "_id";
 
     private MongoClient mongoClient;
 

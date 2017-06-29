@@ -1,12 +1,12 @@
 package vw.be.server.controller;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -23,27 +23,19 @@ import java.io.IOException;
 import java.util.List;
 
 import static vw.be.server.common.IConfigurationConstants.*;
-import static vw.be.server.common.IWebApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
-import static vw.be.server.common.IWebApiConstants.HEADER_CONTENT_LENGTH;
-import static vw.be.server.common.IWebApiConstants.HEADER_CONTENT_TYPE;
+import static vw.be.server.common.ITestConstants.*;
+import static vw.be.server.common.IWebApiConstants.*;
+import static vw.be.server.sevice.MockManageUserService.FIRST_USER_ID;
+import static vw.be.server.sevice.MockManageUserService.FIRST_USER_VERSION;
 
 /**
  * This is our JUnit test for our rest api controller.
- * The test uses vertx-unit, so we declare a custom runner.
- * TODO refactor it to be like ManageUserServiceTest and create test constants interface
+ * It will work with mocked persistence data, always.
  */
 @RunWith(VertxUnitRunner.class)
 public class WebVerticleTest {
 
-    public static final String MY_APP_TEST_CONFIG_FILE = "/my-app-test-config.json";
-
-    private static final String INDEX_PAGE_CONTEXT = "/";
-
-    private static final String USER_ID_TO_FIND = "/1";
-
-    private static final String SIMPLE_CREATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_creation.json";
-    private static final String SIMPLE_UPDATE_USER_JSON_FILE = System.getProperty("user.dir") + "/src/test/resources/simple_user_for_edition.json";
-
+    private static final String URL_CONTEXT_SEPARATOR = "/";
     private static final String INDEX_PAGE_TITLE = "<title>App</title>";
 
     private Vertx vertx;
@@ -62,16 +54,28 @@ public class WebVerticleTest {
         vertx = Vertx.vertx();
 
         if (options == null) {
+            JsonObject config = IOUtils.loadConfiguration(
+                    MY_APP_TEST_CONFIG_FILE,
+                    this.getClass()
+            );
+            removeDBProviderConfiguration(config);
             options = new DeploymentOptions()
                     .setConfig(
-                            IOUtils.loadConfiguration(
-                                    MY_APP_TEST_CONFIG_FILE,
-                                    this.getClass()
-                            )
+                            config
                     );
         }
 
         vertx.deployVerticle(WebVerticle.class.getName(), options, context.asyncAssertSuccess());
+    }
+
+    /**
+     * DB provider is removed, because we want to mock persistence service.
+     * @param config test configuration
+     */
+    private void removeDBProviderConfiguration(JsonObject config) {
+        config.remove(DB_TYPE_KEY);
+        config.remove(DB_NAME_KEY);
+        config.remove(CONNECTION_URL_KEY);
     }
 
     /**
@@ -98,7 +102,7 @@ public class WebVerticleTest {
         // async aspect of the test the right way.
         vertx.createHttpClient().getNow(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
                 options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                INDEX_PAGE_CONTEXT,
+                WEB_ROOT_CONTEXT,
                 response -> response.handler(body -> {
                     context.assertTrue(body.toString().contains(INDEX_PAGE_TITLE));
                     async.complete();
@@ -107,18 +111,34 @@ public class WebVerticleTest {
 
     @Test
     public void addUser(TestContext context) {
-        readJsonFile(context,
-                context.async(),
-                SIMPLE_CREATE_USER_JSON_FILE,
-                true);
+        final String userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass()).toString();
+        manageUser(
+                userToCreate,
+                (options.getConfig().getString(
+                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
+                        + options.getConfig().getString(ADD_USER_SUB_CONTEXT_KEY, DEFAULT_ADD_USER_SUB_CONTEXT_VALUE)),
+                addUserHttpClientResponseHandler(
+                        context,
+                        HttpStatusCodeEnum.CREATED,
+                        addUserBodyHandler(
+                                context,
+                                userToCreate)));
+
     }
 
     @Test
     public void editUser(TestContext context) {
-        readJsonFile(context,
-                context.async(),
-                SIMPLE_UPDATE_USER_JSON_FILE,
-                false);
+        final String userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, this.getClass()).toString();
+        manageUser(
+                userToEdit,
+                (options.getConfig().getString(
+                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
+                        + options.getConfig().getString(EDIT_USER_SUB_CONTEXT_KEY, DEFAULT_EDIT_USER_SUB_CONTEXT_VALUE)),
+                editUserHttpClientResponseHandler(
+                        context,
+                        HttpStatusCodeEnum.NOT_FOUND,
+                        e -> {}));
+
     }
 
     @Test
@@ -147,7 +167,7 @@ public class WebVerticleTest {
         Async async = context.async();
         vertx.createHttpClient().get(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
                 options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                (options.getConfig().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) + USER_ID_TO_FIND))
+                (options.getConfig().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) + URL_CONTEXT_SEPARATOR + FIRST_USER_ID))
                 .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
                 .handler(response -> {
                     boolean isOKHttpStatus = ( response.statusCode() == HttpStatusCodeEnum.OK.getStatusCode() );
@@ -156,8 +176,8 @@ public class WebVerticleTest {
                         if (isOKHttpStatus) {
                             final UserDTO user = Json.decodeValue(body.toString(), UserDTO.class);
                             context.assertNotNull(user.getId());
-                            context.assertEquals(user.getId(), "1");
-                            context.assertEquals(user.getVersion(), 1L);
+                            context.assertEquals(user.getId(), FIRST_USER_ID);
+                            context.assertEquals(user.getVersion(), FIRST_USER_VERSION);
                         }
                         async.complete();
                     }).exceptionHandler(defineThrowableHandler(context));
@@ -170,7 +190,7 @@ public class WebVerticleTest {
         Async async = context.async();
         vertx.createHttpClient().delete(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
                 options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                (options.getConfig().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) + USER_ID_TO_FIND))
+                (options.getConfig().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) + URL_CONTEXT_SEPARATOR + FIRST_USER_ID))
                 .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), HttpStatusCodeEnum.NO_CONTENT.getStatusCode());
@@ -179,48 +199,14 @@ public class WebVerticleTest {
                 .end();
     }
 
-    private void readJsonFile(TestContext context, Async async, String filename, boolean isCreate) {
-        //TODO refactor it to use IOUtils
-        vertx.fileSystem().readFile(filename, result -> {
-            if (result.succeeded()) {
-                if (isCreate) {
-                    manageUser(
-                            result.result(),
-                            (options.getConfig().getString(
-                                    USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
-                                    + options.getConfig().getString(ADD_USER_SUB_CONTEXT_KEY, DEFAULT_ADD_USER_SUB_CONTEXT_VALUE)),
-                            addUserHttpClientResponseHandler(
-                                    context,
-                                    HttpStatusCodeEnum.CREATED,
-                                    addUserBodyHandler(
-                                            context,
-                                            async,
-                                            result)));
-                } else {
-                    manageUser(
-                            result.result(),
-                            (options.getConfig().getString(
-                                    USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
-                                    + options.getConfig().getString(EDIT_USER_SUB_CONTEXT_KEY, DEFAULT_EDIT_USER_SUB_CONTEXT_VALUE)),
-                            editUserHttpClientResponseHandler(
-                                    context,
-                                    HttpStatusCodeEnum.NOT_FOUND,
-                                    editUserBodyHandler(async)));
-                }
-            } else {
-                context.fail(result.cause());
-            }
-        });
-    }
-
-    private void manageUser(Buffer fileContent, String operationURL, Handler<HttpClientResponse> clientResponseHandler) {
+    private void manageUser(String fileContent, String operationURL, Handler<HttpClientResponse> clientResponseHandler) {
         vertx.createHttpClient().post(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
                 options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
                 operationURL)
                 .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-                .putHeader(HEADER_CONTENT_LENGTH, Integer.toString(fileContent.toString().length()))
+                .putHeader(HEADER_CONTENT_LENGTH, Integer.toString(fileContent.length()))
                 .handler(clientResponseHandler)
-                .write(fileContent.toString())
+                .write(fileContent)
                 .end();
     }
 
@@ -234,9 +220,10 @@ public class WebVerticleTest {
         };
     }
 
-    private Handler<Buffer> addUserBodyHandler(TestContext context, Async async, AsyncResult<Buffer> result) {
+    private Handler<Buffer> addUserBodyHandler(TestContext context, String result) {
+        Async async = context.async();
         return body -> {
-            UserDTO inputUser = Json.decodeValue(result.result().toString(), UserDTO.class);
+            UserDTO inputUser = Json.decodeValue(result, UserDTO.class);
             final UserDTO outputUser = Json.decodeValue(body.toString(), UserDTO.class);
             context.assertEquals(outputUser.getFirstName(), inputUser.getFirstName());
             context.assertEquals(outputUser.getSurname(), inputUser.getSurname());
@@ -254,10 +241,6 @@ public class WebVerticleTest {
                     bodyHandler(bodyHandler).
                     exceptionHandler(defineThrowableHandler(context));
         };
-    }
-
-    private Handler<Buffer> editUserBodyHandler(Async async) {
-        return body -> async.complete();
     }
 
     private Handler<Throwable> defineThrowableHandler(TestContext context) {

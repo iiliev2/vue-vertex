@@ -6,9 +6,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import vw.be.common.dto.UserDTO;
@@ -18,8 +20,10 @@ import vw.be.server.sevice.IManageUserService;
 
 import java.io.IOException;
 
-import static vw.be.server.controller.WebVerticleTest.MY_APP_TEST_CONFIG_FILE;
-import static vw.be.server.factory.ManageUserServiceFactory.DB_TYPE_KEY;
+import static vw.be.server.common.ITestConstants.MY_APP_TEST_CONFIG_FILE;
+import static vw.be.server.common.ITestConstants.SIMPLE_USER_FOR_CREATION_JSON_FILE;
+import static vw.be.server.common.ITestConstants.SIMPLE_USER_FOR_EDITION_JSON_FILE;
+import static vw.be.server.common.IConfigurationConstants.DB_TYPE_KEY;
 
 /**
  * This is our JUnit test for our MONGO persistence service for user management.
@@ -28,15 +32,16 @@ import static vw.be.server.factory.ManageUserServiceFactory.DB_TYPE_KEY;
 @RunWith(VertxUnitRunner.class)
 public class ManageUserServiceTest {
 
-    private static final String SIMPLE_USER_FOR_CREATION_JSON_FILE = "/simple_user_for_creation.json";
-    private static final String SIMPLE_USER_FOR_EDITION_JSON_FILE = "/simple_user_for_edition.json";
     private static final String UPDATED_SURNAME = "The Master";
 
     private static MongoClient mongoClient;
     private static IManageUserService mongoManageUserService;
 
+    @Rule
+    public Timeout rule = Timeout.seconds(10);
+
     @BeforeClass
-    public static void setUp() throws IOException {
+    public static void setUp(TestContext context) throws IOException {
         JsonObject config = IOUtils.loadConfiguration(MY_APP_TEST_CONFIG_FILE, ManageUserServiceTest.class);
         if (!config.getString(DB_TYPE_KEY, "").isEmpty()) {
             mongoClient = MongoClient.createNonShared(Vertx.vertx(), config);
