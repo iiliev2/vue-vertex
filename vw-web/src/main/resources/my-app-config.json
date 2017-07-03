@@ -1,10 +1,7 @@
 {
   "http.port": 23002,
   "web.api.context": "/api/*",
-  "user.web.api.context": "/api/user",
-  "add.user.web.api.method": "/add",
-  "edit.user.web.api.method": "/edit",
-  "get.all.users.web.api.method": "/getAll" /*,
+  "user.web.api.context": "/api/users" /*
   "db.type": "mongo",
   "db_name": "vertx",
   "connection_string": "mongodb://localhost:27017" */

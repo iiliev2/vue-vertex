@@ -115,8 +115,7 @@ public class WebVerticleTest {
         manageUser(
                 userToCreate,
                 (options.getConfig().getString(
-                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
-                        + options.getConfig().getString(ADD_USER_SUB_CONTEXT_KEY, DEFAULT_ADD_USER_SUB_CONTEXT_VALUE)),
+                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)),
                 addUserHttpClientResponseHandler(
                         context,
                         HttpStatusCodeEnum.CREATED,
@@ -132,8 +131,7 @@ public class WebVerticleTest {
         manageUser(
                 userToEdit,
                 (options.getConfig().getString(
-                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
-                        + options.getConfig().getString(EDIT_USER_SUB_CONTEXT_KEY, DEFAULT_EDIT_USER_SUB_CONTEXT_VALUE)),
+                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)),
                 editUserHttpClientResponseHandler(
                         context,
                         HttpStatusCodeEnum.NOT_FOUND,
@@ -147,8 +145,7 @@ public class WebVerticleTest {
         vertx.createHttpClient().get(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
                 options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
                 (options.getConfig().getString(
-                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)
-                        + options.getConfig().getString(GET_ALL_USERS_SUB_CONTEXT_KEY, DEFAULT_GET_ALL_USERS_SUB_CONTEXT_VALUE)))
+                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)))
                 .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), HttpStatusCodeEnum.OK.getStatusCode());

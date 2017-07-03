@@ -1,6 +1,6 @@
 <template>
     <div>
-        <table id="allusers">
+        <table id="allusers" v-if="error===''">
             <tr v-for="item in items">
                 <td>
                     <input type="checkbox" :value="item.id" v-model="checked">
@@ -28,6 +28,7 @@
         data() {
             return {
                 items: [],
+                error: '',
                 checked: []
             }
         }, components: {
@@ -43,12 +44,14 @@
                 this.getAllUsers()
             },
             'getAllUsers': function () {
-                this.$http.get('http://localhost:23002/api/user/getAll')
+                this.$http.get('http://localhost:23002/api/users')
                     .then(response => {
                         this.items = response.data;
+                        this.error = ''
                     })
                     .catch(error => {
-                        this.items = error;
+                        this.items = [];
+                        this.error = "Could not fetch the users"
                     })
             },
             'viewUser': function (user) {
