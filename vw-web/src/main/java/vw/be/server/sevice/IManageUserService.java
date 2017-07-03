@@ -1,15 +1,41 @@
 package vw.be.server.sevice;
 
-import io.vertx.core.Future;
-import vw.be.common.dto.UserDTO;
-
-import java.util.Collection;
-import java.util.Optional;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Repository interface for users
  */
 public interface IManageUserService {
+
+    String DB_QUEUE = "manage.user.db.queue";
+
+    default void onMessage(Message<JsonObject> message){
+        if (!message.headers().contains("action")) {
+            //message.fail(ErrorCodes.NO_ACTION_SPECIFIED.ordinal(), "No action header specified");
+        }
+        String action = message.headers().get("action");
+
+        switch (action) {
+            case "all-users":
+                getAllUsers(message);
+                break;
+            case "get-user-by-id":
+                getUserById(message);
+                break;
+            case "create-user":
+                createUser(message);
+                break;
+            case "edit-user":
+                updateUser(message);
+                break;
+            case "delete-user-by-id":
+                deleteUserById(message);
+                break;
+            default:
+                //message.fail(ErrorCodes.BAD_ACTION.ordinal(), "Bad action: " + action);
+        }
+    }
 
     /**
      * Close persistence container connections
@@ -19,40 +45,35 @@ public interface IManageUserService {
 
     /**
      * Retrieves all users from persistence.
-     *
-     * @return all users as json
+     * @param message empty message
      */
-    Future<Collection<UserDTO>> getAllUsers();
+    void getAllUsers(Message<JsonObject> message);
 
     /**
      * Retrieves a user by id from persistence
      *
-     * @param userID that we search
-     * @return found user or null
+     * @param message get-by-id action to be executed. Id of user that we search.
      */
-    Future<Optional<String>> getUserById(String userID);
+    void getUserById(Message<JsonObject> message);
 
     /**
      * Creates a user in persistence
      *
-     * @param userDTO user to create
-     * @return is user created
+     * @param message create action to be executed. User to create.
      */
-    Future<Boolean> createUser(UserDTO userDTO);
+    void createUser(Message<JsonObject> message);
 
     /**
      * Updates a user in persistence
      *
-     * @param userDTO user to update
-     * @return is user updated
+     * @param message user to update
      */
-    Future<Boolean> updateUser(UserDTO userDTO);
+    void updateUser(Message<JsonObject> message);
 
     /**
      * Deletes a user by id
      *
-     * @param userID user to be deleted
-     * @return is user deleted
+     * @param message action to be executed. User to be deleted.
      */
-    Future<Boolean> deleteUserById(String userID);
+    void deleteUserById(Message<JsonObject> message);
 }

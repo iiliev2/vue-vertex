@@ -32,17 +32,9 @@ public class WebVerticle extends AbstractVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebVerticle.class);
 
-    private ManageUserRestController manageUserRestController;
-
     @Override
     public void start(Future<Void> startFuture) {
         startWebApp((http) -> completeStartupHandler(http, startFuture));
-    }
-
-    @Override
-    public void stop() throws Exception {
-        manageUserRestController.destroy();
-        manageUserRestController = null;
     }
 
     /**
@@ -94,7 +86,7 @@ public class WebVerticle extends AbstractVerticle {
         applicationRouter.route(HttpMethod.PUT, config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN)).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
-        manageUserRestController = new ManageUserRestController(vertx, config());
+        ManageUserRestController manageUserRestController = new ManageUserRestController(vertx, config());
         applicationRouter.mountSubRouter(config().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE), manageUserRestController.getRestAPIRouter());
 
         //Create handler for static resources

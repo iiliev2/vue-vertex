@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import vw.be.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.IOUtils;
+import vw.be.server.verticle.ManageUserDatabaseVerticle;
 import vw.be.server.verticle.WebVerticle;
 
 import java.io.IOException;
@@ -65,7 +66,9 @@ public class WebVerticleTest {
                     );
         }
 
-        vertx.deployVerticle(WebVerticle.class.getName(), options, context.asyncAssertSuccess());
+        vertx.deployVerticle(ManageUserDatabaseVerticle.class.getName(), options, res -> {
+            vertx.deployVerticle(WebVerticle.class.getName(), options, context.asyncAssertSuccess());
+        });
     }
 
     /**

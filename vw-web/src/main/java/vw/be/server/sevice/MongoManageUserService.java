@@ -1,14 +1,11 @@
 package vw.be.server.sevice;
 
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
-import vw.be.common.dto.UserDTO;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Repository interface for users. MongoDB implementation.
@@ -30,90 +27,66 @@ public class MongoManageUserService implements IManageUserService{
     }
 
     @Override
-    public Future<Collection<UserDTO>> getAllUsers() {
-        Future<Collection<UserDTO>> result = Future.future();
+    public void getAllUsers(Message<JsonObject> message) {
         mongoClient.find(COLLECTION, new JsonObject(), findAllResultHandler -> {
             if (findAllResultHandler.succeeded()) {
-                Collection<UserDTO> users = findAllResultHandler.result().stream().map(
-                        user -> new UserDTO(
-                                user.getValue("_id").toString(),
-                                user.getLong("version"),
-                                user.getString("firstName"),
-                                user.getString("surname"),
-                                user.getString("lastName"))
-                ).collect(Collectors.toList());
-
-                result.complete(users);
+                List<JsonObject> users = findAllResultHandler.result();
+                message.reply(users);
             } else {
-                result.fail(findAllResultHandler.cause());
+                message.fail(1, findAllResultHandler.cause().getMessage());
             }
         });
-
-        return result;
     }
 
     @Override
-    public Future<Optional<String>> getUserById(String userID) {
-        Future<Optional<String>> result = Future.future();
-        mongoClient.findOne(COLLECTION, new JsonObject().put(USER_ID, userID), null, findUserResultHandler -> {
+    public void getUserById(Message<JsonObject> message) {
+        mongoClient.findOne(COLLECTION, new JsonObject().put(USER_ID, message.body().getString("id")), null, findUserResultHandler -> {
             if (findUserResultHandler.succeeded()) {
                 JsonObject jsonUser = findUserResultHandler.result();
                 if(jsonUser == null || jsonUser.isEmpty()){
-                    result.complete(Optional.empty());
+                    message.fail(2, findUserResultHandler.cause().getMessage());
                 } else {
-                    result.complete(Optional.of(jsonUser.encodePrettily()));
+                    message.reply(jsonUser);
                 }
             } else {
-                result.fail(findUserResultHandler.cause());
+                message.fail(1, findUserResultHandler.cause().getMessage());
             }
         });
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> createUser(UserDTO userDTO) {
-        Future<Boolean> result = Future.future();
-        JsonObject jsonUser = userDTO.toJsonObject();
-        mongoClient.insert(COLLECTION, jsonUser, res -> {
+    public void createUser(Message<JsonObject> message) {
+        mongoClient.insert(COLLECTION, message.body(), res -> {
             if (res.succeeded()) {
-                userDTO.setUserId(res.result());
-                result.complete(true);
+                message.reply("Created");
             } else {
-                result.fail(res.cause());
+                message.fail(1, res.cause().getMessage());
             }
         });
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> updateUser(UserDTO userDTO) {
-        Future<Boolean> result = Future.future();
-        JsonObject query = new JsonObject().put(USER_ID, userDTO.getId());
-        mongoClient.findOneAndReplace(COLLECTION, query, userDTO.toJsonObject(), res -> {
+    public void updateUser(Message<JsonObject> message) {
+        JsonObject query = new JsonObject().put(USER_ID, message.body().getString("id"));
+        mongoClient.findOneAndUpdate(COLLECTION, query, message.body(), res -> {
             if (res.succeeded()) {
-                result.complete(true);
+                message.reply("Edited");
             } else {
-                result.fail(res.cause());
+                message.fail(1, res.cause().getMessage());
             }
         });
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> deleteUserById(String userID) {
-        Future<Boolean> result = Future.future();
-        JsonObject query = new JsonObject().put(USER_ID, userID);
+    public void deleteUserById(Message<JsonObject> message) {
+        JsonObject query = new JsonObject().put(USER_ID, message.body().getString("id"));
         mongoClient.findOneAndDelete(COLLECTION, query, res -> {
             if (res.succeeded()) {
-                result.complete(true);
+                message.reply("Deleted");
             } else {
-                result.fail(res.cause());
+                message.fail(1, res.cause().getMessage());
             }
         });
 
-        return result;
     }
 }

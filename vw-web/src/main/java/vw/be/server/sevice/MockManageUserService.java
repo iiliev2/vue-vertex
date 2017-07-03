@@ -1,14 +1,15 @@
 package vw.be.server.sevice;
 
-import io.vertx.core.Future;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import vw.be.common.dto.UserDTO;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Repository interface for users. This class is used for mocking purposes, only.
@@ -67,58 +68,56 @@ public class MockManageUserService implements IManageUserService{
     }
 
     @Override
-    public Future<Collection<UserDTO>> getAllUsers() {
-        Future<Collection<UserDTO>> result = Future.future();
-        result.complete(users.values());
-
-        return result;
-    }
-
-    @Override
-    public Future<Optional<String>> getUserById(String userID) {
-        Future<Optional<String>> result = Future.future();
-        UserDTO user = users.getOrDefault(userID, null);
-        if(user == null){
-            result.complete(Optional.empty());
+    public void getAllUsers(Message<JsonObject> message) {
+        UserDTO removedUser = users.remove(message.body().getString("id"));
+        if(removedUser != null){
+            message.reply(users.values().stream().map(UserDTO::toJsonObject).collect(Collectors.toList()));
         } else {
-            result.complete(Optional.of(Json.encodePrettily(user)));
+            message.fail(1, "User does not exists!");
         }
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> createUser(UserDTO userDTO) {
-        Future<Boolean> result = Future.future();
+    public void getUserById(Message<JsonObject> message) {
+        String userId = message.body().getString("id");
+        UserDTO user = users.getOrDefault(userId, null);
+        if(user == null){
+            message.fail(2, "User not found!");
+        } else {
+            message.reply(user.toJsonObject().put("id", userId));
+        }
+    }
+
+    @Override
+    public void createUser(Message<JsonObject> message) {
         Optional<String> maxUserId = users.keySet().stream().max(Comparator.naturalOrder());
+        UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
         userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(FIRST_USER_ID));
         users.put(userDTO.getId(), userDTO);
-        result.complete(true);
-
-        return result;
+        message.reply("Created");
     }
 
     @Override
-    public Future<Boolean> updateUser(UserDTO userDTO) {
-        Future<Boolean> result = Future.future();
-        UserDTO oldUserVersion = users.get(userDTO.getId());
+    public void updateUser(Message<JsonObject> message) {
+        String userId = message.body().getString("id");
+        UserDTO oldUserVersion = users.get(userId);
         if (oldUserVersion == null) {
-            result.complete(false);
+            message.fail(2, "User not found!");
         } else {
+            UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
-            boolean isUpdated = (users.replace(userDTO.getId(), userDTO) != null);
-            result.complete(isUpdated);
+            users.replace(userDTO.getId(), userDTO);
+            message.reply("Edited");
         }
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> deleteUserById(String userID) {
-        Future<Boolean> result = Future.future();
-        UserDTO removedUser = users.remove(userID);
-        result.complete(removedUser != null);
-
-        return result;
+    public void deleteUserById(Message<JsonObject> message) {
+        UserDTO removedUser = users.remove(message.body().getString("id"));
+        if(removedUser != null){
+            message.reply("Deleted");
+        } else {
+            message.fail(1, "User does not exists!");
+        }
     }
 }
