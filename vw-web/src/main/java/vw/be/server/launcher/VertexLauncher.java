@@ -7,7 +7,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import vw.be.server.common.IOUtils;
 import vw.be.server.verticle.ManageUserDatabaseVerticle;
-import vw.be.server.verticle.WebVerticle;
+import vw.be.server.verticle.HttpVerticle;
 
 import java.util.Objects;
 
@@ -33,7 +33,7 @@ public class VertexLauncher {
         dbVerticleDeployment.compose(id -> {
             Future<String> webVerticleDeployment = Future.future();
             VERTX.deployVerticle(
-                    WebVerticle.class.getName(),
+                    HttpVerticle.class.getName(),
                     deploymentOptions,
                     webVerticleDeployment.completer());
 

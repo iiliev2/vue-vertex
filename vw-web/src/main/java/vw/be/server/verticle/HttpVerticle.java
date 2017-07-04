@@ -23,14 +23,14 @@ import java.util.Set;
 import static vw.be.server.common.IConfigurationConstants.*;
 import static vw.be.server.common.IResourceBundleConstants.SERVER_FAILED_MESSAGE;
 import static vw.be.server.common.IResourceBundleConstants.SERVER_STARTED_OK_MESSAGE;
-import static vw.be.server.common.IWebApiConstants.*;
+import static vw.be.server.common.IHttpApiConstants.*;
 
-public class WebVerticle extends AbstractVerticle {
+public class HttpVerticle extends AbstractVerticle {
 
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
     private static final String STATIC_RESOURCES_CONTEXT = "/*";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebVerticle.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpVerticle.class);
 
     @Override
     public void start(Future<Void> startFuture) {

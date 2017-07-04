@@ -79,6 +79,7 @@ public class UserDTO extends GenericDTO {
 
     public JsonObject toJsonObject(){
         return new JsonObject()
+                .put("id", this.getId())
                 .put("version", this.getVersion())
                 .put("createdBy", this.getCreatedBy())
                 .put("editedBy", this.getEditedBy())

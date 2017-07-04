@@ -2,7 +2,7 @@ package vw.be.server.verticle;
 
 import io.vertx.core.AbstractVerticle;
 import vw.be.server.factory.ManageUserServiceFactory;
-import vw.be.server.sevice.IManageUserService;
+import vw.be.server.service.IManageUserService;
 
 public class ManageUserDatabaseVerticle extends AbstractVerticle{
 

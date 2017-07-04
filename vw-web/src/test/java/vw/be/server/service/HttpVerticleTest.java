@@ -1,4 +1,4 @@
-package vw.be.server.controller;
+package vw.be.server.service;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -20,22 +20,22 @@ import vw.be.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.IOUtils;
 import vw.be.server.verticle.ManageUserDatabaseVerticle;
-import vw.be.server.verticle.WebVerticle;
+import vw.be.server.verticle.HttpVerticle;
 
 import java.io.IOException;
 
 import static vw.be.server.common.IConfigurationConstants.*;
 import static vw.be.server.common.ITestConstants.*;
-import static vw.be.server.common.IWebApiConstants.*;
-import static vw.be.server.sevice.MockManageUserService.FIRST_USER_ID;
-import static vw.be.server.sevice.MockManageUserService.FIRST_USER_VERSION;
+import static vw.be.server.common.IHttpApiConstants.*;
+import static vw.be.server.service.MockManageUserService.FIRST_USER_ID;
+import static vw.be.server.service.MockManageUserService.FIRST_USER_VERSION;
 
 /**
  * This is our JUnit test for our rest api controller.
  * It will work with mocked persistence data, always.
  */
 @RunWith(VertxUnitRunner.class)
-public class WebVerticleTest {
+public class HttpVerticleTest {
 
     private static final String URL_CONTEXT_SEPARATOR = "/";
     private static final String INDEX_PAGE_TITLE = "<title>App</title>";
@@ -73,7 +73,7 @@ public class WebVerticleTest {
         vertx.deployVerticle(
                 ManageUserDatabaseVerticle.class.getName(),
                 options,
-                res -> vertx.deployVerticle(WebVerticle.class.getName(), options, context.asyncAssertSuccess())
+                res -> vertx.deployVerticle(HttpVerticle.class.getName(), options, context.asyncAssertSuccess())
         );
     }
 

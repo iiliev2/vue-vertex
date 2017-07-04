@@ -1,4 +1,4 @@
-package vw.be.server.sevice;
+package vw.be.server.service;
 
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static vw.be.server.common.ApplicationErrorCodes.UNEXISTING_OBJECT;
+import static vw.be.server.common.IResourceBundleConstants.USER_NOT_FOUND_MSG;
+import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
 /**
  * Repository interface for users. This class is used for mocking purposes, only.
@@ -44,7 +48,6 @@ public class MockManageUserService implements IManageUserService{
     private Map<String, UserDTO> users = new ConcurrentHashMap<>();
 
     public MockManageUserService() {
-
         setMockupInitialData();
     }
 
@@ -70,18 +73,18 @@ public class MockManageUserService implements IManageUserService{
 
     @Override
     public void getAllUsers(Message<JsonObject> message) {
-        JsonArray array = new JsonArray(users.values().stream().map(UserDTO::toJsonObject).collect(Collectors.toList()));
-        message.reply(array);
+        JsonArray allUsers = new JsonArray(users.values().stream().map(UserDTO::toJsonObject).collect(Collectors.toList()));
+        message.reply(allUsers, createResponseHeaders(FOUND));
     }
 
     @Override
     public void getUserById(Message<JsonObject> message) {
-        String userId = message.body().getString("id");
-        UserDTO user = users.getOrDefault(userId, null);
-        if(user == null){
-            message.fail(2, "User not found!");
+        String userId = message.body().getString(ID);
+        UserDTO userDTO = users.getOrDefault(userId, null);
+        if(userDTO == null){
+            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
         } else {
-            message.reply(user.toJsonObject().put("id", userId));
+            replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(FOUND));
         }
     }
 
@@ -91,33 +94,30 @@ public class MockManageUserService implements IManageUserService{
         UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
         userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(FIRST_USER_ID));
         users.put(userDTO.getId(), userDTO);
-        JsonObject response = new JsonObject();
-        response.put("taskStatus", "Created");
-        response.put("id", userDTO.getId());
-        message.reply(response);
+        replyMessage(message, userDTO.getId(), createResponseHeaders(CREATED));
     }
 
     @Override
     public void updateUser(Message<JsonObject> message) {
-        String userId = message.body().getString("id");
+        String userId = message.body().getString(ID);
         UserDTO oldUserVersion = users.get(userId);
         if (oldUserVersion == null) {
-            message.fail(2, "User not found!");
+            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
         } else {
             UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
             users.replace(userDTO.getId(), userDTO);
-            message.reply("Edited");
+            replyMessage(message, null, createResponseHeaders(MERGED));
         }
     }
 
     @Override
     public void deleteUserById(Message<JsonObject> message) {
-        UserDTO removedUser = users.remove(message.body().getString("id"));
+        UserDTO removedUser = users.remove(message.body().getString(ID));
         if(removedUser != null){
-            message.reply("Deleted");
+            replyMessage(message, null, createResponseHeaders(DELETED));
         } else {
-            message.fail(1, "User does not exists!");
+            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
         }
     }
 }
