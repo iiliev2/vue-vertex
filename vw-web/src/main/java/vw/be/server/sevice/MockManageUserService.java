@@ -2,6 +2,7 @@ package vw.be.server.sevice;
 
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import vw.be.common.dto.UserDTO;
 
@@ -69,12 +70,8 @@ public class MockManageUserService implements IManageUserService{
 
     @Override
     public void getAllUsers(Message<JsonObject> message) {
-        UserDTO removedUser = users.remove(message.body().getString("id"));
-        if(removedUser != null){
-            message.reply(users.values().stream().map(UserDTO::toJsonObject).collect(Collectors.toList()));
-        } else {
-            message.fail(1, "User does not exists!");
-        }
+        JsonArray array = new JsonArray(users.values().stream().map(UserDTO::toJsonObject).collect(Collectors.toList()));
+        message.reply(array);
     }
 
     @Override
@@ -94,7 +91,10 @@ public class MockManageUserService implements IManageUserService{
         UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
         userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(FIRST_USER_ID));
         users.put(userDTO.getId(), userDTO);
-        message.reply("Created");
+        JsonObject response = new JsonObject();
+        response.put("taskStatus", "Created");
+        response.put("id", userDTO.getId());
+        message.reply(response);
     }
 
     @Override

@@ -49,7 +49,7 @@ public class ManageUserRestController implements IManageUserRestController {
             if (reply.succeeded()) {
                 sendResponseSuccess(HttpStatusCodeEnum.OK,
                         routingContext.response(),
-                        Json.encodePrettily(reply.result()));
+                        Json.encodePrettily(reply.result().body()));
             } else {
                 sendResponse(HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE,
                         routingContext.response());
@@ -82,15 +82,15 @@ public class ManageUserRestController implements IManageUserRestController {
     @Override
     public void addUser(RoutingContext routingContext) {
         HttpServerResponse response = routingContext.response();
-        String requestBody = routingContext.getBodyAsString();
+        JsonObject requestBody = routingContext.getBodyAsJson();
         if (requestBody == null) {
             sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader("action", "create-user");
             vertx.eventBus().send(IManageUserService.DB_QUEUE, requestBody, options, reply -> {
                 if (reply.succeeded()) {
-                    sendResponse(HttpStatusCodeEnum.CREATED,
-                            response);
+                    sendResponseSuccess(HttpStatusCodeEnum.CREATED,
+                            response, (((JsonObject)reply.result().body()).getString("id")));
                 } else {
                     sendResponse(HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE,
                             routingContext.response());

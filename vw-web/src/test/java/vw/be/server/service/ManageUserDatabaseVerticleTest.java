@@ -3,6 +3,7 @@ package vw.be.server.service;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -18,12 +19,11 @@ import vw.be.server.sevice.IManageUserService;
 import vw.be.server.verticle.ManageUserDatabaseVerticle;
 
 import java.io.IOException;
-import java.util.List;
 
 import static vw.be.server.common.ITestConstants.*;
 
 /**
- * This is our JUnit test for our MONGO persistence service for user management.
+ * This is our JUnit test for our MONGO/Mock persistence service for user management.
  * The test uses vertx-unit, so we declare a custom runner.
  */
 @RunWith(VertxUnitRunner.class)
@@ -33,7 +33,7 @@ public class ManageUserDatabaseVerticleTest {
     private DeploymentOptions options;
 
     @Rule
-    public Timeout rule = Timeout.seconds(10);
+    public Timeout rule = Timeout.seconds(3);
 
     @Before
     public void setUp(TestContext context) throws IOException {
@@ -65,7 +65,9 @@ public class ManageUserDatabaseVerticleTest {
         DeliveryOptions options = new DeliveryOptions().addHeader("action", "all-users");
         vertx.eventBus().send(IManageUserService.DB_QUEUE, new JsonObject(), options, reply -> {
             if (reply.succeeded()) {
-                context.assertTrue(reply.result() != null && !((List)reply.result()).isEmpty());
+                context.assertNotNull(reply.result());
+                context.assertNotNull(reply.result().body());
+                context.assertFalse(((JsonArray)reply.result().body()).isEmpty());
                 async.complete();
             } else {
                 context.fail(reply.cause());
@@ -77,11 +79,13 @@ public class ManageUserDatabaseVerticleTest {
     public void getUserById(TestContext context) {
         final Async async = context.async();
 
-        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, ManageUserDatabaseVerticleTest.class);
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate.toString(), new DeliveryOptions().addHeader("action", "create-user"), replyOfCreate -> {
+        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
+        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, new DeliveryOptions().addHeader("action", "create-user"), replyOfCreate -> {
             if (replyOfCreate.succeeded()) {
-                JsonObject request = new JsonObject().put("id", userToCreate.getString("id"));
-                vertx.eventBus().send(IManageUserService.DB_QUEUE, request, new DeliveryOptions().addHeader("action", "get-user-by-id"), replyOfGet -> {
+                JsonObject createResponseBody = (JsonObject) replyOfCreate.result().body();
+                context.assertEquals("Created", createResponseBody.getString("taskStatus"));
+                JsonObject getByIdRequest = new JsonObject().put("id", createResponseBody.getString("id"));
+                vertx.eventBus().send(IManageUserService.DB_QUEUE, getByIdRequest, new DeliveryOptions().addHeader("action", "get-user-by-id"), replyOfGet -> {
                     if (replyOfGet.succeeded()) {
                         Object user = replyOfGet.result().body();
                         context.assertNotNull(user);
@@ -101,11 +105,12 @@ public class ManageUserDatabaseVerticleTest {
     public void addUser(TestContext context) {
         final Async async = context.async();
 
-        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, ManageUserDatabaseVerticleTest.class);
+        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
         DeliveryOptions options = new DeliveryOptions().addHeader("action", "create-user");
         vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, options, reply -> {
             if (reply.succeeded()) {
-                context.assertEquals("Created", reply.result().body());
+                JsonObject createResponseBody = (JsonObject) reply.result().body();
+                context.assertEquals("Created", createResponseBody.getString("taskStatus"));
                 async.complete();
             } else {
                 context.fail(reply.cause());
@@ -117,12 +122,13 @@ public class ManageUserDatabaseVerticleTest {
     public void editUser(TestContext context) {
         final Async async = context.async();
 
-        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, ManageUserDatabaseVerticleTest.class);
+        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
         vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, new DeliveryOptions().addHeader("action", "create-user"), replyOfCreate -> {
             if (replyOfCreate.succeeded()) {
-                context.assertEquals("Created", replyOfCreate.result().body());
-                JsonObject userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, ManageUserDatabaseVerticleTest.class)
-                        .put("id", userToCreate.getString("id"));
+                JsonObject createResponseBody = (JsonObject) replyOfCreate.result().body();
+                context.assertEquals("Created", createResponseBody.getString("taskStatus"));
+                JsonObject userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, this.getClass())
+                        .put("id", createResponseBody.getString("id"));
                 vertx.eventBus().send(IManageUserService.DB_QUEUE, userToEdit, new DeliveryOptions().addHeader("action", "edit-user"), replyOfUpdate -> {
                     if (replyOfUpdate.succeeded()) {
                         context.assertEquals("Edited", replyOfUpdate.result().body());
@@ -141,12 +147,13 @@ public class ManageUserDatabaseVerticleTest {
     public void deleteUserById(TestContext context) {
         final Async async = context.async();
 
-        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, ManageUserDatabaseVerticleTest.class);
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate.toString(), new DeliveryOptions().addHeader("action", "create-user"), replyOfCreate -> {
+        JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
+        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, new DeliveryOptions().addHeader("action", "create-user"), replyOfCreate -> {
             if (replyOfCreate.succeeded()) {
-                context.assertEquals("Created", replyOfCreate.result().body());
-                JsonObject userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, ManageUserDatabaseVerticleTest.class);
-                vertx.eventBus().send(IManageUserService.DB_QUEUE, userToEdit.toString(), new DeliveryOptions().addHeader("action", "delete-user-by-id"), replyOfDelete -> {
+                JsonObject createResponseBody = (JsonObject) replyOfCreate.result().body();
+                context.assertEquals("Created", createResponseBody.getString("taskStatus"));
+                JsonObject deleteByIdRequest = new JsonObject().put("id", createResponseBody.getString("id"));
+                vertx.eventBus().send(IManageUserService.DB_QUEUE, deleteByIdRequest, new DeliveryOptions().addHeader("action", "delete-user-by-id"), replyOfDelete -> {
                     if (replyOfDelete.succeeded()) {
                         context.assertEquals("Deleted", replyOfDelete.result().body());
                         async.complete();
