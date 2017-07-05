@@ -21,5 +21,11 @@ public interface IConfigurationConstants {
     String DB_NAME_KEY = "db_name";
     String CONNECTION_URL_KEY = "connection_string";
 
-    String MONGO_DB_PROVIDER = "mongo";
+    String MONGO_DB_PROVIDER = "MONGO";
+    String MOCK_DB_PROVIDER = "MOCK";
+
+    String DB_VERTICLE_COUNT_KEY = "db.verticle.count";
+    int DEFAULT_DB_VERTICLE_COUNT = 1;
+    String HTTP_VERTICLE_COUNT_KEY = "http.verticle.count";
+    int DEFAULT_HTTP_VERTICLE_COUNT = 1;
 }

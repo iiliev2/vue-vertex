@@ -1,4 +1,6 @@
 {
+  "db.verticle.count": 10,
+  "http.verticle.count": 10,
   "http.port": 23002,
   "web.api.context": "/api/*",
   "user.web.api.context": "/api/users" /*

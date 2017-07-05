@@ -2,9 +2,9 @@ package vw.be.server.factory;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import vw.be.server.sevice.IManageUserService;
-import vw.be.server.sevice.MockManageUserService;
-import vw.be.server.sevice.MongoManageUserService;
+import vw.be.server.service.IManageUserService;
+import vw.be.server.service.MockManageUserService;
+import vw.be.server.service.MongoManageUserService;
 
 import static vw.be.server.common.IConfigurationConstants.DB_TYPE_KEY;
 import static vw.be.server.common.IConfigurationConstants.MONGO_DB_PROVIDER;

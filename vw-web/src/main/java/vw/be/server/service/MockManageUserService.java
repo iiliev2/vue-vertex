@@ -1,22 +1,28 @@
-package vw.be.server.sevice;
+package vw.be.server.service;
 
-import io.vertx.core.Future;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import vw.be.common.dto.UserDTO;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import static vw.be.server.common.ApplicationErrorCodes.UNEXISTING_OBJECT;
+import static vw.be.server.common.IResourceBundleConstants.USER_NOT_FOUND_MSG;
+import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
 /**
  * Repository interface for users. This class is used for mocking purposes, only.
  */
 public class MockManageUserService implements IManageUserService{
 
-    public static final String FIRST_USER_ID = "1";
-    public static final long FIRST_USER_VERSION = 1L;
+    static final String FIRST_USER_ID = "1";
+    static final long FIRST_USER_VERSION = 1L;
     private static final String FIRST_USER_FIRST_NAME = "Pesho";
     private static final String FIRST_USER_SURNAME = "Stupid";
     private static final String FIRST_USER_LAST_NAME = "Peshov";
@@ -42,7 +48,6 @@ public class MockManageUserService implements IManageUserService{
     private Map<String, UserDTO> users = new ConcurrentHashMap<>();
 
     public MockManageUserService() {
-
         setMockupInitialData();
     }
 
@@ -67,58 +72,52 @@ public class MockManageUserService implements IManageUserService{
     }
 
     @Override
-    public Future<Collection<UserDTO>> getAllUsers() {
-        Future<Collection<UserDTO>> result = Future.future();
-        result.complete(users.values());
-
-        return result;
+    public void getAllUsers(Message<JsonObject> message) {
+        JsonArray allUsers = new JsonArray(users.values().stream().map(UserDTO::toJsonObject).collect(Collectors.toList()));
+        message.reply(allUsers, createResponseHeaders(FOUND));
     }
 
     @Override
-    public Future<Optional<String>> getUserById(String userID) {
-        Future<Optional<String>> result = Future.future();
-        UserDTO user = users.getOrDefault(userID, null);
-        if(user == null){
-            result.complete(Optional.empty());
+    public void getUserById(Message<JsonObject> message) {
+        String userId = message.body().getString(ID);
+        UserDTO userDTO = users.getOrDefault(userId, null);
+        if(userDTO == null){
+            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
         } else {
-            result.complete(Optional.of(Json.encodePrettily(user)));
+            replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(FOUND));
         }
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> createUser(UserDTO userDTO) {
-        Future<Boolean> result = Future.future();
+    public void createUser(Message<JsonObject> message) {
         Optional<String> maxUserId = users.keySet().stream().max(Comparator.naturalOrder());
+        UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
         userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(FIRST_USER_ID));
         users.put(userDTO.getId(), userDTO);
-        result.complete(true);
-
-        return result;
+        replyMessage(message, userDTO.getId(), createResponseHeaders(CREATED));
     }
 
     @Override
-    public Future<Boolean> updateUser(UserDTO userDTO) {
-        Future<Boolean> result = Future.future();
-        UserDTO oldUserVersion = users.get(userDTO.getId());
+    public void updateUser(Message<JsonObject> message) {
+        String userId = message.body().getString(ID);
+        UserDTO oldUserVersion = users.get(userId);
         if (oldUserVersion == null) {
-            result.complete(false);
+            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
         } else {
+            UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
-            boolean isUpdated = (users.replace(userDTO.getId(), userDTO) != null);
-            result.complete(isUpdated);
+            users.replace(userDTO.getId(), userDTO);
+            replyMessage(message, null, createResponseHeaders(MERGED));
         }
-
-        return result;
     }
 
     @Override
-    public Future<Boolean> deleteUserById(String userID) {
-        Future<Boolean> result = Future.future();
-        UserDTO removedUser = users.remove(userID);
-        result.complete(removedUser != null);
-
-        return result;
+    public void deleteUserById(Message<JsonObject> message) {
+        UserDTO removedUser = users.remove(message.body().getString(ID));
+        if(removedUser != null){
+            replyMessage(message, null, createResponseHeaders(DELETED));
+        } else {
+            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
+        }
     }
 }
