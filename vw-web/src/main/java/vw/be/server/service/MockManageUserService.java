@@ -81,7 +81,7 @@ public class MockManageUserService implements IManageUserService{
     public void getUserById(Message<JsonObject> message) {
         String userId = message.body().getString(ID);
         UserDTO userDTO = users.getOrDefault(userId, null);
-        if(userDTO == null){
+        if (userDTO == null) {
             failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
         } else {
             replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(FOUND));
@@ -114,7 +114,7 @@ public class MockManageUserService implements IManageUserService{
     @Override
     public void deleteUserById(Message<JsonObject> message) {
         UserDTO removedUser = users.remove(message.body().getString(ID));
-        if(removedUser != null){
+        if (removedUser != null) {
             replyMessage(message, null, createResponseHeaders(DELETED));
         } else {
             failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);

@@ -11,7 +11,7 @@ import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.service.IManageUserService;
 
 import static vw.be.server.common.HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE;
-import static vw.be.server.common.IConfigurationConstants.*;
+import static vw.be.server.common.IConfigurationConstants.ROUTE_ROOT;
 import static vw.be.server.common.IHttpApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
 import static vw.be.server.common.IHttpApiConstants.HEADER_CONTENT_TYPE;
 import static vw.be.server.common.PersistenceActionEnum.*;
@@ -31,16 +31,17 @@ public class ManageUserRestController implements IManageUserRestController {
         this.vertx = vertx;
         this.restAPIRouter = Router.router(vertx);
 
-        configure(config);
+        configure();
     }
 
     /**
      * Restful api user method handlers
      */
-    private void configure(JsonObject config) {
-        restAPIRouter.get(config.getString(GET_ALL_USERS_SUB_CONTEXT_KEY, DEFAULT_GET_ALL_USERS_SUB_CONTEXT_VALUE)).handler(this::getAllUsers);
-        restAPIRouter.post(config.getString(ADD_USER_SUB_CONTEXT_KEY, DEFAULT_ADD_USER_SUB_CONTEXT_VALUE)).handler(this::addUser);
-        restAPIRouter.put(config.getString(EDIT_USER_SUB_CONTEXT_KEY, DEFAULT_EDIT_USER_SUB_CONTEXT_VALUE)).handler(this::editUser);
+    private void configure() {
+        restAPIRouter.get(ROUTE_ROOT).handler(this::getAllUsers);
+        restAPIRouter.post(ROUTE_ROOT).handler(this::addUser);
+        restAPIRouter.put(ROUTE_ROOT).handler(this::replaceAllUsers);
+        restAPIRouter.put(USER_BY_ID_SUB_CONTEXT).handler(this::editUser);
         restAPIRouter.get(USER_BY_ID_SUB_CONTEXT).handler(this::getUserById);
         restAPIRouter.delete(USER_BY_ID_SUB_CONTEXT).handler(this::deleteUserById);
     }
@@ -103,16 +104,20 @@ public class ManageUserRestController implements IManageUserRestController {
         }
     }
 
+    public void replaceAllUsers(RoutingContext routingContext) {
+    }
+
     @Override
     public void editUser(RoutingContext routingContext) {
-        String userID = routingContext.request().getParam(USER_ID);
+        String uriUserID = routingContext.request().getParam(USER_ID);
         HttpServerResponse response = routingContext.response();
         JsonObject requestBody = routingContext.getBodyAsJson();
-        if (requestBody == null || userID == null || userID.isEmpty()) {
+        //TODO user id can be in requset body. ADD logic!!!
+        if (requestBody == null || !matchingUserID(requestBody.getString(ID), uriUserID)) {
             sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE));
-            vertx.eventBus().send(IManageUserService.DB_QUEUE, requestBody.put(ID, userID), options, reply -> {
+            vertx.eventBus().send(IManageUserService.DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
                 if (reply.succeeded()) {
                     sendResponse(HttpStatusCodeEnum.OK,
                             response);
@@ -165,10 +170,15 @@ public class ManageUserRestController implements IManageUserRestController {
 
     /**
      * Router field getter method.
+     *
      * @return Controller router object.
      */
     public Router getRestAPIRouter() {
         return restAPIRouter;
+    }
+
+    private boolean matchingUserID(String userId, String URI_ID) {
+        return URI_ID != null && (userId == null || URI_ID.equals(userId));
     }
 
 }

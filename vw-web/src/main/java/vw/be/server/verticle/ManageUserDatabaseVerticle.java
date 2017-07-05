@@ -10,7 +10,7 @@ import static vw.be.server.common.IConfigurationConstants.DB_TYPE_KEY;
 import static vw.be.server.common.IConfigurationConstants.MOCK_DB_PROVIDER;
 import static vw.be.server.common.IResourceBundleConstants.DB_VERTICLE_STARTED_OK_MESSAGE;
 
-public class ManageUserDatabaseVerticle extends AbstractVerticle{
+public class ManageUserDatabaseVerticle extends AbstractVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManageUserDatabaseVerticle.class);
 

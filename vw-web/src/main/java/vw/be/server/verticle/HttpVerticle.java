@@ -21,9 +21,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static vw.be.server.common.IConfigurationConstants.*;
+import static vw.be.server.common.IHttpApiConstants.*;
 import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_FAILED_MESSAGE;
 import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_STARTED_OK_MESSAGE;
-import static vw.be.server.common.IHttpApiConstants.*;
 
 public class HttpVerticle extends AbstractVerticle {
 

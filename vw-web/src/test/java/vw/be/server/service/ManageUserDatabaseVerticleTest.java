@@ -22,12 +22,8 @@ import java.io.IOException;
 
 import static vw.be.server.common.ITestConstants.*;
 import static vw.be.server.common.PersistenceActionEnum.*;
-import static vw.be.server.common.PersistenceResponseCodeEnum.CREATED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.DELETED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.MERGED;
-import static vw.be.server.service.IManageUserService.ID;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_ACTION;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_RESPONSE_CODE;
+import static vw.be.server.common.PersistenceResponseCodeEnum.*;
+import static vw.be.server.service.IManageUserService.*;
 
 /**
  * This is our JUnit test for our MONGO/Mock persistence service for user management.
@@ -56,7 +52,7 @@ public class ManageUserDatabaseVerticleTest {
             );
             options = new DeploymentOptions()
                     .setConfig(
-                        config
+                            config
                     );
         }
 
@@ -69,7 +65,7 @@ public class ManageUserDatabaseVerticleTest {
     }
 
     @Test
-    public void getAllUsers(TestContext context){
+    public void getAllUsers(TestContext context) {
         final Async async = context.async();
 
         DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_ALL));
@@ -77,7 +73,7 @@ public class ManageUserDatabaseVerticleTest {
             if (reply.succeeded()) {
                 context.assertNotNull(reply.result());
                 context.assertNotNull(reply.result().body());
-                context.assertFalse(((JsonArray)reply.result().body()).isEmpty());
+                context.assertFalse(((JsonArray) reply.result().body()).isEmpty());
                 async.complete();
             } else {
                 context.fail(reply.cause());

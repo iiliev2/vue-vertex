@@ -14,7 +14,7 @@ import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 /**
  * Repository interface for users. MongoDB implementation.
  */
-public class MongoManageUserService implements IManageUserService{
+public class MongoManageUserService implements IManageUserService {
 
     private static final String COLLECTION = "user";
     private static final String USER_ID = "_id";
@@ -48,7 +48,7 @@ public class MongoManageUserService implements IManageUserService{
         mongoClient.findOne(COLLECTION, new JsonObject().put(USER_ID, message.body().getString(ID)), null, findUserResultHandler -> {
             if (findUserResultHandler.succeeded()) {
                 JsonObject jsonUser = findUserResultHandler.result();
-                if(jsonUser == null || jsonUser.isEmpty()){
+                if (jsonUser == null || jsonUser.isEmpty()) {
                     failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
                 } else {
                     replyMessage(message, jsonUser, createResponseHeaders(FOUND));
@@ -77,7 +77,7 @@ public class MongoManageUserService implements IManageUserService{
         mongoClient.findOneAndUpdate(COLLECTION, query, forUpdate, res -> {
             if (res.succeeded()) {
                 replyMessage(message, null, createResponseHeaders(MERGED));
-           } else {
+            } else {
                 failMessage(DB_ERROR, message, res.cause().getMessage());
             }
         });

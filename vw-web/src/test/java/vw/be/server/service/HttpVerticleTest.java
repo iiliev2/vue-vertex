@@ -19,14 +19,14 @@ import org.junit.runner.RunWith;
 import vw.be.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.IOUtils;
-import vw.be.server.verticle.ManageUserDatabaseVerticle;
 import vw.be.server.verticle.HttpVerticle;
+import vw.be.server.verticle.ManageUserDatabaseVerticle;
 
 import java.io.IOException;
 
 import static vw.be.server.common.IConfigurationConstants.*;
-import static vw.be.server.common.ITestConstants.*;
 import static vw.be.server.common.IHttpApiConstants.*;
+import static vw.be.server.common.ITestConstants.*;
 import static vw.be.server.service.MockManageUserService.FIRST_USER_ID;
 import static vw.be.server.service.MockManageUserService.FIRST_USER_VERSION;
 

@@ -6,8 +6,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import vw.be.server.common.IOUtils;
-import vw.be.server.verticle.ManageUserDatabaseVerticle;
 import vw.be.server.verticle.HttpVerticle;
+import vw.be.server.verticle.ManageUserDatabaseVerticle;
 
 import java.util.Objects;
 
