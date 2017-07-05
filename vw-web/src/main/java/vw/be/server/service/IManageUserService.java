@@ -24,6 +24,10 @@ public interface IManageUserService {
 
     String ID = "id";
 
+    /**
+     * This method receives all events incoming events for 'manage.user.db.queue'
+     * @param message received message
+     */
     default void onMessage(Message<JsonObject> message){
         MultiMap headers = message.headers();
         if (!headers.contains(PERSISTENCE_ACTION)) {
@@ -52,14 +56,31 @@ public interface IManageUserService {
         }
     }
 
+    /**
+     * It creates message reply response response code header, see {@link PersistenceResponseCodeEnum}.
+     * @param responseCode response code
+     * @return reply delivery options with response header set.
+     */
     default DeliveryOptions createResponseHeaders(PersistenceResponseCodeEnum responseCode) {
         return new DeliveryOptions().addHeader(PERSISTENCE_RESPONSE_CODE, String.valueOf(responseCode));
     }
 
+    /**
+     * It creates message failures on error or missing data.
+     * @param errorCode application error code {@link ApplicationErrorCodes}
+     * @param message reply message
+     * @param errorDescription application error description
+     */
     default void failMessage(ApplicationErrorCodes errorCode, Message<JsonObject> message, String errorDescription) {
         message.fail(errorCode.ordinal(), errorDescription);
     }
 
+    /**
+     * It creates message reply on success.
+     * @param message reply message
+     * @param body reply message body
+     * @param deliveryOptions reply delivery options with response header.
+     */
     default void replyMessage(Message<JsonObject> message, Object body, DeliveryOptions deliveryOptions) {
         message.reply(body, deliveryOptions);
     }
@@ -77,28 +98,24 @@ public interface IManageUserService {
 
     /**
      * Retrieves a user by id from persistence
-     *
      * @param message get-by-id action to be executed. Id of user that we search.
      */
     void getUserById(Message<JsonObject> message);
 
     /**
      * Creates a user in persistence
-     *
      * @param message create action to be executed. User to create.
      */
     void createUser(Message<JsonObject> message);
 
     /**
      * Updates a user in persistence
-     *
      * @param message user to update
      */
     void updateUser(Message<JsonObject> message);
 
     /**
      * Deletes a user by id
-     *
      * @param message action to be executed. User to be deleted.
      */
     void deleteUserById(Message<JsonObject> message);

@@ -21,8 +21,8 @@ import static vw.be.server.common.PersistenceResponseCodeEnum.*;
  */
 public class MockManageUserService implements IManageUserService{
 
-    public static final String FIRST_USER_ID = "1";
-    public static final long FIRST_USER_VERSION = 1L;
+    static final String FIRST_USER_ID = "1";
+    static final long FIRST_USER_VERSION = 1L;
     private static final String FIRST_USER_FIRST_NAME = "Pesho";
     private static final String FIRST_USER_SURNAME = "Stupid";
     private static final String FIRST_USER_LAST_NAME = "Peshov";

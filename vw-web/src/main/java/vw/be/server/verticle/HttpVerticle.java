@@ -21,8 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static vw.be.server.common.IConfigurationConstants.*;
-import static vw.be.server.common.IResourceBundleConstants.SERVER_FAILED_MESSAGE;
-import static vw.be.server.common.IResourceBundleConstants.SERVER_STARTED_OK_MESSAGE;
+import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_FAILED_MESSAGE;
+import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_STARTED_OK_MESSAGE;
 import static vw.be.server.common.IHttpApiConstants.*;
 
 public class HttpVerticle extends AbstractVerticle {
@@ -68,10 +68,10 @@ public class HttpVerticle extends AbstractVerticle {
     private void completeStartupHandler(AsyncResult<HttpServer> http, Future<Void> startFuture) {
         if (http.succeeded()) {
             startFuture.complete();
-            LOGGER.info(String.format(SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE)));
+            LOGGER.info(String.format(HTTP_SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE)));
         } else {
             startFuture.fail(http.cause());
-            LOGGER.error(String.format(SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause()));
+            LOGGER.error(String.format(HTTP_SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause()));
         }
     }
 
