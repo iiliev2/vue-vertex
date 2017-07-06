@@ -19,7 +19,7 @@ public class ManageUserDatabaseVerticle extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         this.manageUserService = ManageUserServiceFactory.getService(vertx, config());
-        vertx.eventBus().consumer(IManageUserService.DB_QUEUE, manageUserService::onMessage);
+        vertx.eventBus().consumer(IManageUserService.MANAGE_USER_DB_QUEUE, manageUserService::onMessage);
         LOGGER.info(String.format(DB_VERTICLE_STARTED_OK_MESSAGE, config().getString(DB_TYPE_KEY, MOCK_DB_PROVIDER)));
     }
 

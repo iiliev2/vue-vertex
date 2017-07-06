@@ -50,7 +50,7 @@ public class ManageUserRestController implements IManageUserRestController {
     public void getAllUsers(RoutingContext routingContext) {
         DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_ALL));
 
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, new JsonObject(), options, reply -> {
+        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, new JsonObject(), options, reply -> {
             if (reply.succeeded()) {
                 sendResponseSuccess(HttpStatusCodeEnum.OK,
                         routingContext.response(),
@@ -71,7 +71,7 @@ public class ManageUserRestController implements IManageUserRestController {
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_BY_ID));
             JsonObject request = new JsonObject().put(ID, userID);
-            vertx.eventBus().send(IManageUserService.DB_QUEUE, request, options, reply -> {
+            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, request, options, reply -> {
                 if (reply.succeeded()) {
                     sendResponseSuccess(HttpStatusCodeEnum.OK,
                             response,
@@ -92,7 +92,7 @@ public class ManageUserRestController implements IManageUserRestController {
             sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE));
-            vertx.eventBus().send(IManageUserService.DB_QUEUE, requestBody, options, reply -> {
+            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, requestBody, options, reply -> {
                 if (reply.succeeded()) {
                     sendResponseSuccess(HttpStatusCodeEnum.CREATED,
                             response, reply.result().body().toString());
@@ -117,7 +117,7 @@ public class ManageUserRestController implements IManageUserRestController {
             sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE));
-            vertx.eventBus().send(IManageUserService.DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
+            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
                 if (reply.succeeded()) {
                     sendResponse(HttpStatusCodeEnum.OK,
                             response);
@@ -138,7 +138,7 @@ public class ManageUserRestController implements IManageUserRestController {
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(DELETE_BY_ID));
             JsonObject request = new JsonObject().put(ID, userID);
-            vertx.eventBus().send(IManageUserService.DB_QUEUE, request, options, reply -> {
+            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, request, options, reply -> {
                 if (reply.succeeded()) {
                     sendResponse(HttpStatusCodeEnum.NO_CONTENT, response);
                 } else {

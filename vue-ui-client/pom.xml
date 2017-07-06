@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>vw.be</groupId>
 		<artifactId>vw-parent</artifactId>
-		<version>3.4.1</version>
+		<version>1.0</version>
 		<relativePath>../vw-parent/pom.xml</relativePath>
 	</parent>
 	<groupId>vw.fe</groupId>

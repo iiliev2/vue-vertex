@@ -69,7 +69,7 @@ public class ManageUserDatabaseVerticleTest {
         final Async async = context.async();
 
         DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_ALL));
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, new JsonObject(), options, reply -> {
+        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, new JsonObject(), options, reply -> {
             if (reply.succeeded()) {
                 context.assertNotNull(reply.result());
                 context.assertNotNull(reply.result().body());
@@ -86,14 +86,14 @@ public class ManageUserDatabaseVerticleTest {
         final Async async = context.async();
 
         JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE)), replyOfCreate -> {
+        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, userToCreate, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE)), replyOfCreate -> {
             if (replyOfCreate.succeeded()) {
                 Object createResponseBody = replyOfCreate.result().body();
                 MultiMap headers = replyOfCreate.result().headers();
                 context.assertTrue(headers.contains(PERSISTENCE_RESPONSE_CODE));
                 context.assertTrue(String.valueOf(CREATED).contentEquals(headers.get(PERSISTENCE_RESPONSE_CODE)));
                 JsonObject getByIdRequest = new JsonObject().put(ID, createResponseBody);
-                vertx.eventBus().send(IManageUserService.DB_QUEUE, getByIdRequest, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_BY_ID)), replyOfGet -> {
+                vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, getByIdRequest, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_BY_ID)), replyOfGet -> {
                     if (replyOfGet.succeeded()) {
                         Object user = replyOfGet.result().body();
                         context.assertNotNull(user);
@@ -116,7 +116,7 @@ public class ManageUserDatabaseVerticleTest {
 
         JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
         DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE));
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, options, reply -> {
+        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, userToCreate, options, reply -> {
             if (reply.succeeded()) {
                 MultiMap headers = reply.result().headers();
                 context.assertTrue(headers.contains(PERSISTENCE_RESPONSE_CODE));
@@ -133,14 +133,14 @@ public class ManageUserDatabaseVerticleTest {
         final Async async = context.async();
 
         JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE)), replyOfCreate -> {
+        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, userToCreate, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE)), replyOfCreate -> {
             if (replyOfCreate.succeeded()) {
                 Object createResponseBody = replyOfCreate.result().body();
                 MultiMap headers = replyOfCreate.result().headers();
                 context.assertTrue(headers.contains(PERSISTENCE_RESPONSE_CODE));
                 context.assertTrue(String.valueOf(CREATED).contentEquals(headers.get(PERSISTENCE_RESPONSE_CODE)));
                 JsonObject userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, this.getClass()).put(ID, createResponseBody);
-                vertx.eventBus().send(IManageUserService.DB_QUEUE, userToEdit, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE)), replyOfMerge -> {
+                vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, userToEdit, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE)), replyOfMerge -> {
                     if (replyOfMerge.succeeded()) {
                         MultiMap mergeHeaders = replyOfMerge.result().headers();
                         context.assertTrue(mergeHeaders.contains(PERSISTENCE_RESPONSE_CODE));
@@ -161,14 +161,14 @@ public class ManageUserDatabaseVerticleTest {
         final Async async = context.async();
 
         JsonObject userToCreate = IOUtils.loadConfiguration(SIMPLE_USER_FOR_CREATION_JSON_FILE, this.getClass());
-        vertx.eventBus().send(IManageUserService.DB_QUEUE, userToCreate, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE)), replyOfCreate -> {
+        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, userToCreate, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE)), replyOfCreate -> {
             if (replyOfCreate.succeeded()) {
                 Object createResponseBody = replyOfCreate.result().body();
                 MultiMap headers = replyOfCreate.result().headers();
                 context.assertTrue(headers.contains(PERSISTENCE_RESPONSE_CODE));
                 context.assertTrue(String.valueOf(CREATED).contentEquals(headers.get(PERSISTENCE_RESPONSE_CODE)));
                 JsonObject deleteByIdRequest = new JsonObject().put(ID, createResponseBody);
-                vertx.eventBus().send(IManageUserService.DB_QUEUE, deleteByIdRequest, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(DELETE_BY_ID)), replyOfDelete -> {
+                vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, deleteByIdRequest, new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(DELETE_BY_ID)), replyOfDelete -> {
                     if (replyOfDelete.succeeded()) {
                         MultiMap deleteHeaders = replyOfDelete.result().headers();
                         context.assertTrue(deleteHeaders.contains(PERSISTENCE_RESPONSE_CODE));

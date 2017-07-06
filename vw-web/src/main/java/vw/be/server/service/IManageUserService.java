@@ -18,7 +18,7 @@ import static vw.be.server.common.IResourceBundleConstants.NO_ACTION_HEADER_SPEC
  */
 public interface IManageUserService {
 
-    String DB_QUEUE = "manage.user.db.queue";
+    String MANAGE_USER_DB_QUEUE = "manage.user.db.queue";
     String PERSISTENCE_ACTION = "action";
     String PERSISTENCE_RESPONSE_CODE = "responseCode";
 

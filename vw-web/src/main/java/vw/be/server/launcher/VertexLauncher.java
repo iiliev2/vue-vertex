@@ -1,67 +1,35 @@
 package vw.be.server.launcher;
 
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
-import io.vertx.ext.dropwizard.Match;
 import vw.be.server.common.IOUtils;
-import vw.be.server.verticle.HttpVerticle;
-import vw.be.server.verticle.ManageUserDatabaseVerticle;
-import vw.be.server.verticle.MonitoringVerticle;
 
 import java.util.Objects;
 
-import static vw.be.server.common.IConfigurationConstants.*;
-import static vw.be.server.common.IResourceBundleConstants.VERTICLE_DEPLOYED_SUCCESSFULY_MSG;
-import static vw.be.server.common.IResourceBundleConstants.VERTICLE_FAILED_TO_DEPLOY;
-import static vw.be.server.service.IManageUserService.DB_QUEUE;
+import static vw.be.server.common.IConfigurationConstants.DEFAULT_START_MONITORING;
+import static vw.be.server.common.IConfigurationConstants.START_MONITORING_KEY;
 
 public class VertexLauncher {
-
-    private static final Vertx VERTX = Vertx.vertx(new VertxOptions().setMetricsOptions(
-            new DropwizardMetricsOptions().
-                    setEnabled(true).
-                    addMonitoredEventBusHandler(
-                            new Match().setValue(DB_QUEUE))));
 
     private static final String DEFAULT_CONFIGURATION = "my-app-config.json";
     private static final String CONF_ARG = "-conf";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VertexLauncher.class);
-
     public static void main(String[] args) {
-        Future<String> dbVerticleDeployment = Future.future();
         DeploymentOptions deploymentOptions = getDeploymentOptions(args);
 
-        VERTX.deployVerticle(ManageUserDatabaseVerticle.class.getName(), deploymentOptions.setInstances(deploymentOptions.getConfig().getInteger(DB_VERTICLE_COUNT_KEY, DEFAULT_DB_VERTICLE_COUNT)), dbVerticleDeployment.completer());
+        final boolean toStartMonitoring = deploymentOptions.getConfig().getBoolean(START_MONITORING_KEY, DEFAULT_START_MONITORING);
 
-        dbVerticleDeployment.compose(id -> {
-            Future<String> httpVerticleDeployment = Future.future();
-            VERTX.deployVerticle(
-                    HttpVerticle.class.getName(),
-                    deploymentOptions.setInstances(deploymentOptions.getConfig().getInteger(HTTP_VERTICLE_COUNT_KEY, DEFAULT_HTTP_VERTICLE_COUNT)),
-                    httpVerticleDeployment.completer());
+        initDeploymentProcessor(toStartMonitoring).deploy(deploymentOptions);
+    }
 
-            return httpVerticleDeployment;
-        }).compose(monitoring -> {
-            Future<String> monitoringVerticleDeployment = Future.future();
-            VERTX.deployVerticle(
-                    MonitoringVerticle.class.getName(),
-                    new DeploymentOptions(),
-                    monitoringVerticleDeployment.completer());
+    private static IDeploymentProcessor initDeploymentProcessor(boolean toStartMonitoring) {
+        IDeploymentProcessor deploymentProcessor;
+        if (toStartMonitoring) {
+            deploymentProcessor = new MonitoringDeploymentProcessor();
+        } else {
+            deploymentProcessor = new StandartDeploymentProcessor();
+        }
 
-            return monitoringVerticleDeployment;
-        }).setHandler(ar -> {
-            if (ar.succeeded()) {
-                LOGGER.info(String.format(VERTICLE_DEPLOYED_SUCCESSFULY_MSG, ar.result()));
-            } else {
-                LOGGER.error(String.format(VERTICLE_FAILED_TO_DEPLOY, ar.cause()));
-            }
-        });
+        return deploymentProcessor;
     }
 
     private static DeploymentOptions getDeploymentOptions(String[] args) {
