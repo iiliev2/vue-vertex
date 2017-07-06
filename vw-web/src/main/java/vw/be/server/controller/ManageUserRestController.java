@@ -2,21 +2,22 @@ package vw.be.server.controller;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import vw.be.server.common.HttpStatusCodeEnum;
+import vw.be.server.common.PersistenceResponseCodeEnum;
 import vw.be.server.service.IManageUserService;
 
-import static vw.be.server.common.HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE;
+import static vw.be.server.common.HttpStatusCodeEnum.*;
 import static vw.be.server.common.IConfigurationConstants.ROUTE_ROOT;
 import static vw.be.server.common.IHttpApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
 import static vw.be.server.common.IHttpApiConstants.HEADER_CONTENT_TYPE;
 import static vw.be.server.common.PersistenceActionEnum.*;
-import static vw.be.server.service.IManageUserService.ID;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_ACTION;
+import static vw.be.server.service.IManageUserService.*;
 
 /**
  * Users restful web api vertx asynchronous implementation.
@@ -27,7 +28,7 @@ public class ManageUserRestController implements IManageUserRestController {
 
     private Vertx vertx;
 
-    public ManageUserRestController(Vertx vertx, JsonObject config) {
+    public ManageUserRestController(Vertx vertx) {
         this.vertx = vertx;
         this.restAPIRouter = Router.router(vertx);
 
@@ -50,9 +51,9 @@ public class ManageUserRestController implements IManageUserRestController {
     public void getAllUsers(RoutingContext routingContext) {
         DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_ALL));
 
-        vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, new JsonObject(), options, reply -> {
+        vertx.eventBus().send(MANAGE_USER_DB_QUEUE, new JsonObject(), options, reply -> {
             if (reply.succeeded()) {
-                sendResponseSuccess(HttpStatusCodeEnum.OK,
+                sendResponseSuccess(OK,
                         routingContext.response(),
                         Json.encodePrettily(reply.result().body()));
             } else {
@@ -67,18 +68,16 @@ public class ManageUserRestController implements IManageUserRestController {
         String userID = routingContext.request().getParam(USER_ID);
         HttpServerResponse response = routingContext.response();
         if (userID == null || userID.isEmpty()) {
-            sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
+            sendResponse(BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_BY_ID));
             JsonObject request = new JsonObject().put(ID, userID);
-            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, request, options, reply -> {
+            vertx.eventBus().send(MANAGE_USER_DB_QUEUE, request, options, reply -> {
                 if (reply.succeeded()) {
-                    sendResponseSuccess(HttpStatusCodeEnum.OK,
-                            response,
-                            Json.encodePrettily(reply.result().body()));
+                    replySucceeded(response, reply.result(), OK);
                 } else {
-                    sendResponse(HttpStatusCodeEnum.NOT_FOUND,
-                            response);
+                    sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
+                            routingContext.response());
                 }
             });
         }
@@ -89,7 +88,7 @@ public class ManageUserRestController implements IManageUserRestController {
         HttpServerResponse response = routingContext.response();
         JsonObject requestBody = routingContext.getBodyAsJson();
         if (requestBody == null) {
-            sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
+            sendResponse(BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE));
             vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, requestBody, options, reply -> {
@@ -114,13 +113,12 @@ public class ManageUserRestController implements IManageUserRestController {
         JsonObject requestBody = routingContext.getBodyAsJson();
         //TODO user id can be in requset body. ADD logic!!!
         if (requestBody == null || !matchingUserID(requestBody.getString(ID), uriUserID)) {
-            sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
+            sendResponse(BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE));
-            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
+            vertx.eventBus().send(MANAGE_USER_DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
                 if (reply.succeeded()) {
-                    sendResponse(HttpStatusCodeEnum.OK,
-                            response);
+                    replySucceeded(response, reply.result(), NO_CONTENT);
                 } else {
                     sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
                             routingContext.response());
@@ -134,18 +132,45 @@ public class ManageUserRestController implements IManageUserRestController {
         HttpServerResponse response = routingContext.response();
         String userID = routingContext.request().getParam(USER_ID);
         if (userID == null) {
-            sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
+            sendResponse(BAD_REQUEST, response);
         } else {
             DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(DELETE_BY_ID));
             JsonObject request = new JsonObject().put(ID, userID);
-            vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, request, options, reply -> {
+            vertx.eventBus().send(MANAGE_USER_DB_QUEUE, request, options, reply -> {
                 if (reply.succeeded()) {
-                    sendResponse(HttpStatusCodeEnum.NO_CONTENT, response);
+                    replySucceeded(response, reply.result(), NO_CONTENT);
                 } else {
                     sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
                             routingContext.response());
                 }
             });
+        }
+    }
+
+    private void replySucceeded(HttpServerResponse response, Message<Object> message, HttpStatusCodeEnum onSuccessHttpResponceCode) {
+        if (message == null) {
+            sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
+                    response);
+            return;
+        }
+
+        if (message.headers() != null
+                && String.valueOf(PersistenceResponseCodeEnum.NOT_FOUND)
+                .equals(message.headers().get(PERSISTENCE_RESPONSE_CODE))
+                ) {
+            sendResponse(HttpStatusCodeEnum.NOT_FOUND,
+                    response);
+        } else {
+            final Object messageBody = message.body();
+            if (messageBody == null) {
+                sendResponse(onSuccessHttpResponceCode,
+                        response);
+            } else {
+                sendResponseSuccess(onSuccessHttpResponceCode,
+                        response,
+                        Json.encodePrettily(messageBody));
+
+            }
         }
     }
 

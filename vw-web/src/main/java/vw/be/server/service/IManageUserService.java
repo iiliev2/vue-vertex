@@ -53,7 +53,7 @@ public interface IManageUserService {
                 deleteUserById(message);
                 break;
             default:
-                failMessage(BAD_ACTION, message, String.format(BAD_PERSISTENCE_ACTION_MSG, action));
+                failMessage(message, BAD_ACTION, String.format(BAD_PERSISTENCE_ACTION_MSG, action));
         }
     }
 
@@ -69,12 +69,11 @@ public interface IManageUserService {
 
     /**
      * It creates message failures on error or missing data.
-     *
+     *  @param message          reply message
      * @param errorCode        application error code {@link ApplicationErrorCodes}
-     * @param message          reply message
      * @param errorDescription application error description
      */
-    default void failMessage(ApplicationErrorCodes errorCode, Message<JsonObject> message, String errorDescription) {
+    default void failMessage(Message<JsonObject> message, ApplicationErrorCodes errorCode, String errorDescription) {
         message.fail(errorCode.ordinal(), errorDescription);
     }
 

@@ -86,7 +86,7 @@ public class HttpVerticle extends AbstractVerticle {
         applicationRouter.route(HttpMethod.PUT, config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN)).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
-        ManageUserRestController manageUserRestController = new ManageUserRestController(vertx, config());
+        ManageUserRestController manageUserRestController = new ManageUserRestController(vertx);
         applicationRouter.mountSubRouter(config().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE), manageUserRestController.getRestAPIRouter());
 
         //Create handler for static resources

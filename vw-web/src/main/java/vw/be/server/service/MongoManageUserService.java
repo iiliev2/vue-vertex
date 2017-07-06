@@ -7,8 +7,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 
 import static vw.be.server.common.ApplicationErrorCodes.DB_ERROR;
-import static vw.be.server.common.ApplicationErrorCodes.UNEXISTING_OBJECT;
-import static vw.be.server.common.IResourceBundleConstants.USER_NOT_FOUND_MSG;
 import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
 /**
@@ -38,7 +36,7 @@ public class MongoManageUserService implements IManageUserService {
                 JsonArray allUsers = new JsonArray(findAllResultHandler.result());
                 replyMessage(message, allUsers, createResponseHeaders(FOUND));
             } else {
-                failMessage(DB_ERROR, message, findAllResultHandler.cause().getMessage());
+                failMessage(message, DB_ERROR, findAllResultHandler.cause().getMessage());
             }
         });
     }
@@ -49,12 +47,12 @@ public class MongoManageUserService implements IManageUserService {
             if (findUserResultHandler.succeeded()) {
                 JsonObject jsonUser = findUserResultHandler.result();
                 if (jsonUser == null || jsonUser.isEmpty()) {
-                    failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
+                    replyMessage(message, null, createResponseHeaders(NOT_FOUND));
                 } else {
                     replyMessage(message, jsonUser, createResponseHeaders(FOUND));
                 }
             } else {
-                failMessage(DB_ERROR, message, findUserResultHandler.cause().getMessage());
+                failMessage(message, DB_ERROR, findUserResultHandler.cause().getMessage());
             }
         });
     }
@@ -65,7 +63,7 @@ public class MongoManageUserService implements IManageUserService {
             if (res.succeeded()) {
                 replyMessage(message, res.result(), createResponseHeaders(CREATED));
             } else {
-                failMessage(DB_ERROR, message, res.cause().getMessage());
+                failMessage(message, DB_ERROR, res.cause().getMessage());
             }
         });
     }
@@ -78,7 +76,7 @@ public class MongoManageUserService implements IManageUserService {
             if (res.succeeded()) {
                 replyMessage(message, null, createResponseHeaders(MERGED));
             } else {
-                failMessage(DB_ERROR, message, res.cause().getMessage());
+                failMessage(message, DB_ERROR, res.cause().getMessage());
             }
         });
     }
@@ -90,7 +88,7 @@ public class MongoManageUserService implements IManageUserService {
             if (res.succeeded()) {
                 replyMessage(message, null, createResponseHeaders(DELETED));
             } else {
-                failMessage(DB_ERROR, message, res.cause().getMessage());
+                failMessage(message, DB_ERROR, res.cause().getMessage());
             }
         });
     }

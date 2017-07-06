@@ -12,8 +12,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static vw.be.server.common.ApplicationErrorCodes.UNEXISTING_OBJECT;
-import static vw.be.server.common.IResourceBundleConstants.USER_NOT_FOUND_MSG;
 import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
 /**
@@ -82,7 +80,7 @@ public class MockManageUserService implements IManageUserService{
         String userId = message.body().getString(ID);
         UserDTO userDTO = users.getOrDefault(userId, null);
         if (userDTO == null) {
-            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
+            replyMessage(message, null, createResponseHeaders(NOT_FOUND));
         } else {
             replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(FOUND));
         }
@@ -102,7 +100,7 @@ public class MockManageUserService implements IManageUserService{
         String userId = message.body().getString(ID);
         UserDTO oldUserVersion = users.get(userId);
         if (oldUserVersion == null) {
-            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
+            replyMessage(message, null, createResponseHeaders(NOT_FOUND));
         } else {
             UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
             userDTO.setVersion(oldUserVersion.getVersion() + 1);
@@ -117,7 +115,7 @@ public class MockManageUserService implements IManageUserService{
         if (removedUser != null) {
             replyMessage(message, null, createResponseHeaders(DELETED));
         } else {
-            failMessage(UNEXISTING_OBJECT, message, USER_NOT_FOUND_MSG);
+            replyMessage(message, null, createResponseHeaders(NOT_FOUND));
         }
     }
 }
