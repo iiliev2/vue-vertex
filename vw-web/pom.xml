@@ -52,6 +52,13 @@
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
+        <!-- start metrics-->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-dropwizard-metrics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- end metrics-->
 	</dependencies>
 
 	<build>

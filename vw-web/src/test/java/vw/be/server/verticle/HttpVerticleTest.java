@@ -1,4 +1,4 @@
-package vw.be.server.service;
+package vw.be.server.verticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -19,8 +19,6 @@ import org.junit.runner.RunWith;
 import vw.be.common.dto.UserDTO;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.IOUtils;
-import vw.be.server.verticle.HttpVerticle;
-import vw.be.server.verticle.ManageUserDatabaseVerticle;
 
 import java.io.IOException;
 

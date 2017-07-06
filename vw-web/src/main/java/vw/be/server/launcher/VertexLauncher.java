@@ -3,21 +3,30 @@ package vw.be.server.launcher;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
+import io.vertx.ext.dropwizard.Match;
 import vw.be.server.common.IOUtils;
 import vw.be.server.verticle.HttpVerticle;
 import vw.be.server.verticle.ManageUserDatabaseVerticle;
+import vw.be.server.verticle.MonitoringVerticle;
 
 import java.util.Objects;
 
 import static vw.be.server.common.IConfigurationConstants.*;
 import static vw.be.server.common.IResourceBundleConstants.VERTICLE_DEPLOYED_SUCCESSFULY_MSG;
 import static vw.be.server.common.IResourceBundleConstants.VERTICLE_FAILED_TO_DEPLOY;
+import static vw.be.server.service.IManageUserService.DB_QUEUE;
 
 public class VertexLauncher {
 
-    private static final Vertx VERTX = Vertx.vertx();
+    private static final Vertx VERTX = Vertx.vertx(new VertxOptions().setMetricsOptions(
+            new DropwizardMetricsOptions().
+                    setEnabled(true).
+                    addMonitoredEventBusHandler(
+                            new Match().setValue(DB_QUEUE))));
 
     private static final String DEFAULT_CONFIGURATION = "my-app-config.json";
     private static final String CONF_ARG = "-conf";
@@ -38,6 +47,14 @@ public class VertexLauncher {
                     httpVerticleDeployment.completer());
 
             return httpVerticleDeployment;
+        }).compose(monitoring -> {
+            Future<String> monitoringVerticleDeployment = Future.future();
+            VERTX.deployVerticle(
+                    MonitoringVerticle.class.getName(),
+                    new DeploymentOptions(),
+                    monitoringVerticleDeployment.completer());
+
+            return monitoringVerticleDeployment;
         }).setHandler(ar -> {
             if (ar.succeeded()) {
                 LOGGER.info(String.format(VERTICLE_DEPLOYED_SUCCESSFULY_MSG, ar.result()));

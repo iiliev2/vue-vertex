@@ -1,4 +1,4 @@
-package vw.be.server.service;
+package vw.be.server.verticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.MultiMap;
@@ -16,7 +16,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import vw.be.server.common.IOUtils;
-import vw.be.server.verticle.ManageUserDatabaseVerticle;
+import vw.be.server.service.IManageUserService;
 
 import java.io.IOException;
 
