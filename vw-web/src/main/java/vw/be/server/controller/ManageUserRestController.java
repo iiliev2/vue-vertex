@@ -1,9 +1,23 @@
 package vw.be.server.controller;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import static vw.be.server.common.HttpStatusCodeEnum.BAD_REQUEST;
+import static vw.be.server.common.HttpStatusCodeEnum.NO_CONTENT;
+import static vw.be.server.common.HttpStatusCodeEnum.OK;
+import static vw.be.server.common.HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE;
+import static vw.be.server.common.IConfigurationConstants.ROUTE_ROOT;
+import static vw.be.server.common.IHttpApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
+import static vw.be.server.common.IHttpApiConstants.HEADER_CONTENT_TYPE;
+import static vw.be.server.common.PersistenceActionEnum.CREATE;
+import static vw.be.server.common.PersistenceActionEnum.DELETE_BY_ID;
+import static vw.be.server.common.PersistenceActionEnum.GET_ALL;
+import static vw.be.server.common.PersistenceActionEnum.GET_BY_ID;
+import static vw.be.server.common.PersistenceActionEnum.MERGE;
+import static vw.be.server.service.IManageUserService.ID;
+import static vw.be.server.service.IManageUserService.MANAGE_USER_DB_QUEUE;
+import static vw.be.server.service.IManageUserService.PERSISTENCE_ACTION;
+import static vw.be.server.service.IManageUserService.PERSISTENCE_RESPONSE_CODE;
+
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerResponse;
@@ -14,13 +28,6 @@ import io.vertx.ext.web.RoutingContext;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.PersistenceResponseCodeEnum;
 import vw.be.server.service.IManageUserService;
-
-import static vw.be.server.common.HttpStatusCodeEnum.*;
-import static vw.be.server.common.IConfigurationConstants.ROUTE_ROOT;
-import static vw.be.server.common.IHttpApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
-import static vw.be.server.common.IHttpApiConstants.HEADER_CONTENT_TYPE;
-import static vw.be.server.common.PersistenceActionEnum.*;
-import static vw.be.server.service.IManageUserService.*;
 
 /**
  * Users restful web api vertx asynchronous implementation.
@@ -47,19 +54,6 @@ public class ManageUserRestController implements IManageUserRestController {
 		restAPIRouter.put(ROUTE_ROOT).handler(this::replaceAllUsers);
 		restAPIRouter.put(USER_BY_ID_SUB_CONTEXT).handler(this::editUser);
 		restAPIRouter.get(USER_BY_ID_SUB_CONTEXT).handler(this::getUserById);
-		restAPIRouter.delete(USER_BY_ID_SUB_CONTEXT).handler(this::deleteUserById);
-	}
-
-	/**
-	 * Restful api user method handlers
-	 */
-	private void configure(JsonObject config) {
-		restAPIRouter.get(ROUTE_ROOT).handler(this::getAllUsers);
-		restAPIRouter.post(ROUTE_ROOT).handler(this::addUser);
-		restAPIRouter.put(ROUTE_ROOT).handler(this::replaceAllUsers);
-		restAPIRouter.put(USER_BY_ID_SUB_CONTEXT).handler(this::editUser);
-		restAPIRouter.get(USER_BY_ID_SUB_CONTEXT).handler(this::getUserById);
-		restAPIRouter.delete(ROUTE_ROOT).handler(this::delete);
 		restAPIRouter.delete(USER_BY_ID_SUB_CONTEXT).handler(this::deleteUserById);
 	}
 
@@ -121,64 +115,27 @@ public class ManageUserRestController implements IManageUserRestController {
 
 	@Override
 	public void replaceAllUsers(RoutingContext routingContext) {
-	}manageUserService.createUser(userDTO).setHandler(
-
-	resultHandler(routingContext.response(), res -> {
-				if (res) {
-					sendResponseSuccess(HttpStatusCodeEnum.CREATED, response, Json.encodePrettily(userDTO));
-				} else {
-					sendResponse(HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
-				}
-			}));
-		}
-
-	}
-
-	@Override
-	public void replaceAllUsers(RoutingContext routingContext) {
 	}
 
 	@Override
 	public void editUser(RoutingContext routingContext) {
+		String uriUserID = routingContext.request().getParam(USER_ID);
 		HttpServerResponse response = routingContext.response();
-		String id = routingContext.request().getParam(USER_ID);
-		String requestBody = routingContext.getBodyAsString();
-		final UserDTO userDTO = Json.decodeValue(requestBody, UserDTO.class);
-		if (requestBody == null || id.isEmpty() || notMatchingUserID(userDTO, id)) {
-			sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
+		JsonObject requestBody = routingContext.getBodyAsJson();
+		// TODO user id can be in requset body. ADD logic!!!
+		if (requestBody == null || !matchingUserID(requestBody.getString(ID), uriUserID)) {
+			sendResponse(BAD_REQUEST, response);
 		} else {
-			userDTO.setUserId(id);
-			manageUserService.updateUser(userDTO).setHandler(resultHandler(routingContext.response(), res -> {
-				if (res) {
-					sendResponseSuccess(HttpStatusCodeEnum.OK, response, Json.encodePrettily(userDTO));
+			DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE));
+			vertx.eventBus().send(MANAGE_USER_DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
+				if (reply.succeeded()) {
+					replySucceeded(response, reply.result(), NO_CONTENT);
 				} else {
-					sendResponse(HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
+					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
+							routingContext.response());
 				}
-			}));
+			});
 		}
-	}
-
-	@Override
-	public void delete(RoutingContext routingContext) {
-		HttpServerResponse response = routingContext.response();
-		HttpServerRequest request = routingContext.request();
-		Set<String> ids = new HashSet<>();
-		String parameterName;
-		try {
-			for (Entry<String, String> param : request.params().entries()) {
-				parameterName = param.getKey().trim().toLowerCase();
-				switch (parameterName) {
-				case "list":
-				case "range":
-				default:
-					throw new MalformedQueryException("Unknown query parameter:" + parameterName);
-				}
-			}
-		} catch (MalformedQueryException e) {
-			// TODO: handle exception
-		} catch (Throwable e) {
-		}
-
 	}
 
 	@Override
@@ -186,36 +143,55 @@ public class ManageUserRestController implements IManageUserRestController {
 		HttpServerResponse response = routingContext.response();
 		String userID = routingContext.request().getParam(USER_ID);
 		if (userID == null) {
-			sendResponse(HttpStatusCodeEnum.BAD_REQUEST, response);
+			sendResponse(BAD_REQUEST, response);
 		} else {
-			manageUserService.deleteUserById(userID).setHandler(resultHandler(routingContext.response(), res -> {
-				if (res) {
-					sendResponse(HttpStatusCodeEnum.NO_CONTENT, response);
+			DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(DELETE_BY_ID));
+			JsonObject request = new JsonObject().put(ID, userID);
+			vertx.eventBus().send(MANAGE_USER_DB_QUEUE, request, options, reply -> {
+				if (reply.succeeded()) {
+					replySucceeded(response, reply.result(), NO_CONTENT);
 				} else {
-					sendResponse(HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
+					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
+							routingContext.response());
 				}
-			}));
+			});
 		}
 	}
 
-	/**
-	 * Wrap the result handler with failure handler (503 Service Unavailable)
-	 */
-	private <T> Handler<AsyncResult<T>> resultHandler(HttpServerResponse response, Consumer<T> consumer) {
-		return res -> {
-			if (res.succeeded()) {
-				consumer.accept(res.result());
+	private void replySucceeded(HttpServerResponse response, Message<Object> message,
+			HttpStatusCodeEnum onSuccessHttpResponceCode) {
+		if (message == null) {
+			sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
+					response);
+			return;
+		}
+
+		if (message.headers() != null
+				&& String.valueOf(PersistenceResponseCodeEnum.NOT_FOUND)
+						.equals(message.headers().get(PERSISTENCE_RESPONSE_CODE))) {
+			sendResponse(HttpStatusCodeEnum.NOT_FOUND,
+					response);
+		} else {
+			final Object messageBody = message.body();
+			if (messageBody == null) {
+				sendResponse(onSuccessHttpResponceCode,
+						response);
 			} else {
-				sendResponse(HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE, response);
+				sendResponseSuccess(onSuccessHttpResponceCode,
+						response,
+						Json.encodePrettily(messageBody));
+
 			}
-		};
+		}
 	}
 
 	/**
 	 * Send response with HTTP code given as argument.
 	 */
 	private void sendResponse(HttpStatusCodeEnum statusCode, HttpServerResponse response) {
-		response.setStatusCode(statusCode.getStatusCode()).end();
+		response
+				.setStatusCode(statusCode.getStatusCode())
+				.end();
 	}
 
 	/**
@@ -223,8 +199,10 @@ public class ManageUserRestController implements IManageUserRestController {
 	 */
 	private void sendResponseSuccess(HttpStatusCodeEnum statusCode, HttpServerResponse response,
 			String responseContent) {
-		response.setStatusCode(statusCode.getStatusCode())
-				.putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8).end(responseContent);
+		response
+				.setStatusCode(statusCode.getStatusCode())
+				.putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
+				.end(responseContent);
 	}
 
 	/**
@@ -236,11 +214,14 @@ public class ManageUserRestController implements IManageUserRestController {
 		return restAPIRouter;
 	}
 
-	private boolean notMatchingUserID(UserDTO userDTO, String URI_ID) {
-		String id = userDTO.getId();
-		if (id != null)
-			return id.equals(URI_ID);
-		return false;
+	private boolean matchingUserID(String userId, String URI_ID) {
+		return URI_ID != null && (userId == null || URI_ID.equals(userId));
+	}
+
+	@Override
+	public void delete(RoutingContext routingContext) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

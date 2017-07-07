@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>vw-parent</artifactId>
 		<groupId>vw.be</groupId>
-		<version>3.4.1</version>
+		<version>1.0</version>
 		<relativePath>../vw-parent/pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -20,23 +20,28 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-core</artifactId>
-			<version>${project.version}</version>
+			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-web</artifactId>
-			<version>${project.version}</version>
+			<version>${vertx.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-mongo-client</artifactId>
-			<version>${project.version}</version>
+			<version>${vertx.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>vw.be</groupId>
 			<artifactId>vw-common</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-dropwizard-metrics</artifactId>
+			<version>${vertx.version}</version>
 		</dependency>
 
 		<!-- For the tests -->
@@ -49,7 +54,7 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-unit</artifactId>
-			<version>${project.version}</version>
+			<version>${vertx.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

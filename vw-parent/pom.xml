@@ -7,12 +7,16 @@
 	<groupId>vw.be</groupId>
 	<artifactId>vw-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>3.4.1</version>
+	<version>1.0</version>
 	<modules>
 		<module>../vue-ui-client</module>
 		<module>../vw-web</module>
 		<module>../vw-common</module>
 	</modules>
+
+	<properties>
+		<vertx.version>3.4.2</vertx.version>
+	</properties>
 
 	<build>
 

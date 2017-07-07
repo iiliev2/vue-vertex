@@ -1,6 +1,6 @@
 package vw.be.server.common;
 
-public interface IWebApiConstants {
+public interface IHttpApiConstants {
 
     String HEADER_CONTENT_TYPE = "content-type";
     String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=UTF-8";

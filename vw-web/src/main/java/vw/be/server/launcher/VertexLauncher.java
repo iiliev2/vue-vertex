@@ -1,36 +1,35 @@
 package vw.be.server.launcher;
 
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import vw.be.server.common.IOUtils;
-import vw.be.server.verticle.WebVerticle;
 
 import java.util.Objects;
 
-import static vw.be.server.common.IResourceBundleConstants.VERTICLE_DEPLOYED_SUCCESSFULY_MSG;
-import static vw.be.server.common.IResourceBundleConstants.VERTICLE_FAILED_TO_DEPLOY;
+import static vw.be.server.common.IConfigurationConstants.DEFAULT_START_MONITORING;
+import static vw.be.server.common.IConfigurationConstants.START_MONITORING_KEY;
 
 public class VertexLauncher {
-
-    private static final Vertx VERTX = Vertx.vertx();
 
     private static final String DEFAULT_CONFIGURATION = "my-app-config.json";
     private static final String CONF_ARG = "-conf";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebVerticle.class);
-
     public static void main(String[] args) {
-        String verticleYoDeploy = WebVerticle.class.getName();
-        VERTX.deployVerticle(verticleYoDeploy, getDeploymentOptions(args).setInstances(10), res -> {
-            if (res.succeeded()) {
-                LOGGER.info(String.format(VERTICLE_DEPLOYED_SUCCESSFULY_MSG, res.result()));
-            } else {
-                LOGGER.error(String.format(VERTICLE_FAILED_TO_DEPLOY, verticleYoDeploy));
-            }
-        });
+        DeploymentOptions deploymentOptions = getDeploymentOptions(args);
 
+        final boolean toStartMonitoring = deploymentOptions.getConfig().getBoolean(START_MONITORING_KEY, DEFAULT_START_MONITORING);
+
+        initDeploymentProcessor(toStartMonitoring).deploy(deploymentOptions);
+    }
+
+    private static IDeploymentProcessor initDeploymentProcessor(boolean toStartMonitoring) {
+        IDeploymentProcessor deploymentProcessor;
+        if (toStartMonitoring) {
+            deploymentProcessor = new MonitoringDeploymentProcessor();
+        } else {
+            deploymentProcessor = new StandartDeploymentProcessor();
+        }
+
+        return deploymentProcessor;
     }
 
     private static DeploymentOptions getDeploymentOptions(String[] args) {

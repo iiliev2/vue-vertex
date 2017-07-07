@@ -21,28 +21,20 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static vw.be.server.common.IConfigurationConstants.*;
-import static vw.be.server.common.IResourceBundleConstants.SERVER_FAILED_MESSAGE;
-import static vw.be.server.common.IResourceBundleConstants.SERVER_STARTED_OK_MESSAGE;
-import static vw.be.server.common.IWebApiConstants.*;
+import static vw.be.server.common.IHttpApiConstants.*;
+import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_FAILED_MESSAGE;
+import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_STARTED_OK_MESSAGE;
 
-public class WebVerticle extends AbstractVerticle {
+public class HttpVerticle extends AbstractVerticle {
 
     private static final String WEB_ROOT_FOLDER = "WEB-INF";
     private static final String STATIC_RESOURCES_CONTEXT = "/*";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebVerticle.class);
-
-    private ManageUserRestController manageUserRestController;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpVerticle.class);
 
     @Override
     public void start(Future<Void> startFuture) {
         startWebApp((http) -> completeStartupHandler(http, startFuture));
-    }
-
-    @Override
-    public void stop() throws Exception {
-        manageUserRestController.destroy();
-        manageUserRestController = null;
     }
 
     /**
@@ -76,10 +68,10 @@ public class WebVerticle extends AbstractVerticle {
     private void completeStartupHandler(AsyncResult<HttpServer> http, Future<Void> startFuture) {
         if (http.succeeded()) {
             startFuture.complete();
-            LOGGER.info(String.format(SERVER_STARTED_OK_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE)));
+            LOGGER.info(String.format(HTTP_SERVER_STARTED_OK_MESSAGE, config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE)));
         } else {
             startFuture.fail(http.cause());
-            LOGGER.error(String.format(SERVER_FAILED_MESSAGE, this.getClass().getSimpleName(), config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause()));
+            LOGGER.error(String.format(HTTP_SERVER_FAILED_MESSAGE, config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), http.cause()));
         }
     }
 
@@ -94,7 +86,7 @@ public class WebVerticle extends AbstractVerticle {
         applicationRouter.route(HttpMethod.PUT, config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN)).handler(BodyHandler.create());
 
         // mount sub router for manage users web restful api
-        manageUserRestController = new ManageUserRestController(vertx, config());
+        ManageUserRestController manageUserRestController = new ManageUserRestController(vertx);
         applicationRouter.mountSubRouter(config().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE), manageUserRestController.getRestAPIRouter());
 
         //Create handler for static resources
