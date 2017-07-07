@@ -40,4 +40,17 @@ public interface IManageUserRestController {
      */
     void deleteUserById(RoutingContext routingContext);
 
+	/**
+	 * Restful service, that replaces the entire collection of users with a new one.
+	 * An empty collection is not allowed, use {@link #delete(RoutingContext)} instead.
+	 * @param routingContext vertx restAPIRouter routing context for restful web api
+	 */
+	void replaceAllUsers(RoutingContext routingContext);
+
+	/**
+	 * Restful service, that deletes the entire collection of users.
+	 * @param routingContext vertx restAPIRouter routing context for restful web api
+	 */
+	void delete(RoutingContext routingContext);
+
 }

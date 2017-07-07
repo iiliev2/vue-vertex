@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -121,4 +122,22 @@ public class MockManageUserService implements IManageUserService{
 
         return result;
     }
+
+	@Override
+	public Future<Boolean> replaceAllUsers(Collection<UserDTO> users) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Boolean> delete() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Boolean> delete(Set<String> ids) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
