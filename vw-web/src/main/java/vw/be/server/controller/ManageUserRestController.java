@@ -12,14 +12,21 @@ import static vw.be.server.common.PersistenceActionEnum.DELETE_BY_ID;
 import static vw.be.server.common.PersistenceActionEnum.GET_ALL;
 import static vw.be.server.common.PersistenceActionEnum.GET_BY_ID;
 import static vw.be.server.common.PersistenceActionEnum.MERGE;
+import static vw.be.server.controller.parsers.IQueryParamParser.COMMA_SEPARATED_LIST_PARSER;
+import static vw.be.server.controller.parsers.IQueryParamParser.COMMA_SEPARATED_RANGE_PARSER;
 import static vw.be.server.service.IManageUserService.ID;
 import static vw.be.server.service.IManageUserService.MANAGE_USER_DB_QUEUE;
 import static vw.be.server.service.IManageUserService.PERSISTENCE_ACTION;
 import static vw.be.server.service.IManageUserService.PERSISTENCE_RESPONSE_CODE;
 
+import java.util.Collection;
+import java.util.Map.Entry;
+
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -27,6 +34,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import vw.be.server.common.HttpStatusCodeEnum;
 import vw.be.server.common.PersistenceResponseCodeEnum;
+import vw.be.server.controller.parsers.IQueryParamParser;
+import vw.be.server.exceptions.MalformedQueryException;
 import vw.be.server.service.IManageUserService;
 
 /**
@@ -51,6 +60,7 @@ public class ManageUserRestController implements IManageUserRestController {
 	private void configure() {
 		restAPIRouter.get(ROUTE_ROOT).handler(this::getAllUsers);
 		restAPIRouter.post(ROUTE_ROOT).handler(this::addUser);
+		restAPIRouter.delete(ROUTE_ROOT).handler(this::delete);
 		restAPIRouter.put(ROUTE_ROOT).handler(this::replaceAllUsers);
 		restAPIRouter.put(USER_BY_ID_SUB_CONTEXT).handler(this::editUser);
 		restAPIRouter.get(USER_BY_ID_SUB_CONTEXT).handler(this::getUserById);
@@ -63,12 +73,9 @@ public class ManageUserRestController implements IManageUserRestController {
 
 		vertx.eventBus().send(MANAGE_USER_DB_QUEUE, new JsonObject(), options, reply -> {
 			if (reply.succeeded()) {
-				sendResponseSuccess(OK,
-						routingContext.response(),
-						Json.encodePrettily(reply.result().body()));
+				sendResponseSuccess(OK, routingContext.response(), Json.encodePrettily(reply.result().body()));
 			} else {
-				sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
-						routingContext.response());
+				sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 			}
 		});
 	}
@@ -86,8 +93,7 @@ public class ManageUserRestController implements IManageUserRestController {
 				if (reply.succeeded()) {
 					replySucceeded(response, reply.result(), OK);
 				} else {
-					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
-							routingContext.response());
+					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 				}
 			});
 		}
@@ -103,11 +109,9 @@ public class ManageUserRestController implements IManageUserRestController {
 			DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE));
 			vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, requestBody, options, reply -> {
 				if (reply.succeeded()) {
-					sendResponseSuccess(HttpStatusCodeEnum.CREATED,
-							response, reply.result().body().toString());
+					sendResponseSuccess(HttpStatusCodeEnum.CREATED, response, reply.result().body().toString());
 				} else {
-					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
-							routingContext.response());
+					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 				}
 			});
 		}
@@ -131,8 +135,7 @@ public class ManageUserRestController implements IManageUserRestController {
 				if (reply.succeeded()) {
 					replySucceeded(response, reply.result(), NO_CONTENT);
 				} else {
-					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
-							routingContext.response());
+					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 				}
 			});
 		}
@@ -151,35 +154,59 @@ public class ManageUserRestController implements IManageUserRestController {
 				if (reply.succeeded()) {
 					replySucceeded(response, reply.result(), NO_CONTENT);
 				} else {
-					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
-							routingContext.response());
+					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 				}
 			});
+		}
+	}
+
+	@Override
+	public void delete(RoutingContext routingContext) {
+		HttpServerResponse response = routingContext.response();
+		HttpServerRequest request = routingContext.request();
+		MultiMap query = request.params();
+		String paramName;
+		Collection<String> ids = null;
+		IQueryParamParser<String, Collection<String>> parser;
+		try {
+			for (Entry<String, String> param : query.entries()) {
+				paramName = param.getKey().trim().toLowerCase();
+				switch (paramName) {
+				case "list":
+					parser = COMMA_SEPARATED_LIST_PARSER;
+					break;
+				case "range":
+					parser = COMMA_SEPARATED_RANGE_PARSER;
+					break;
+				default:
+					throw new MalformedQueryException("Unrecognized query parameter: " + paramName);
+				}
+				if (ids == null)
+					ids = parser.apply(param.getValue());
+				else
+					ids.addAll(parser.apply(param.getValue()));
+			}
+		} catch (MalformedQueryException e) {
+			sendResponse(BAD_REQUEST, response.setStatusMessage(e.getMessage()));
 		}
 	}
 
 	private void replySucceeded(HttpServerResponse response, Message<Object> message,
 			HttpStatusCodeEnum onSuccessHttpResponceCode) {
 		if (message == null) {
-			sendResponse(SERVICE_TEMPORARY_UNAVAILABLE,
-					response);
+			sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, response);
 			return;
 		}
 
-		if (message.headers() != null
-				&& String.valueOf(PersistenceResponseCodeEnum.NOT_FOUND)
-						.equals(message.headers().get(PERSISTENCE_RESPONSE_CODE))) {
-			sendResponse(HttpStatusCodeEnum.NOT_FOUND,
-					response);
+		if (message.headers() != null && String.valueOf(PersistenceResponseCodeEnum.NOT_FOUND)
+				.equals(message.headers().get(PERSISTENCE_RESPONSE_CODE))) {
+			sendResponse(HttpStatusCodeEnum.NOT_FOUND, response);
 		} else {
 			final Object messageBody = message.body();
 			if (messageBody == null) {
-				sendResponse(onSuccessHttpResponceCode,
-						response);
+				sendResponse(onSuccessHttpResponceCode, response);
 			} else {
-				sendResponseSuccess(onSuccessHttpResponceCode,
-						response,
-						Json.encodePrettily(messageBody));
+				sendResponseSuccess(onSuccessHttpResponceCode, response, Json.encodePrettily(messageBody));
 
 			}
 		}
@@ -189,9 +216,7 @@ public class ManageUserRestController implements IManageUserRestController {
 	 * Send response with HTTP code given as argument.
 	 */
 	private void sendResponse(HttpStatusCodeEnum statusCode, HttpServerResponse response) {
-		response
-				.setStatusCode(statusCode.getStatusCode())
-				.end();
+		response.setStatusCode(statusCode.getStatusCode()).end();
 	}
 
 	/**
@@ -199,10 +224,8 @@ public class ManageUserRestController implements IManageUserRestController {
 	 */
 	private void sendResponseSuccess(HttpStatusCodeEnum statusCode, HttpServerResponse response,
 			String responseContent) {
-		response
-				.setStatusCode(statusCode.getStatusCode())
-				.putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-				.end(responseContent);
+		response.setStatusCode(statusCode.getStatusCode())
+				.putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8).end(responseContent);
 	}
 
 	/**
@@ -216,12 +239,6 @@ public class ManageUserRestController implements IManageUserRestController {
 
 	private boolean matchingUserID(String userId, String URI_ID) {
 		return URI_ID != null && (userId == null || URI_ID.equals(userId));
-	}
-
-	@Override
-	public void delete(RoutingContext routingContext) {
-		// TODO Auto-generated method stub
-
 	}
 
 }
