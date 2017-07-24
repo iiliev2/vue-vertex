@@ -13,6 +13,12 @@
   </table>
   <div v-else>{{error}}</div>
 
+  <div class="block">
+    <span class="demonstration">When you have few pages</span>
+    <el-pagination layout="prev, pager, next" :total="50">
+    </el-pagination>
+  </div>
+
   <router-link :to="'/create_user'" tag="button">Create User</router-link>
   <delete v-if="checked.length>0" message="Are you sure you want to delete these users?" @delete-accepted="deleteAccepted" @delete-canceleted="deleteCanceled">
   </delete>
