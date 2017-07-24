@@ -1,27 +1,5 @@
 package vw.be.server.controller;
 
-import static vw.be.server.common.HttpStatusCodeEnum.BAD_REQUEST;
-import static vw.be.server.common.HttpStatusCodeEnum.NO_CONTENT;
-import static vw.be.server.common.HttpStatusCodeEnum.OK;
-import static vw.be.server.common.HttpStatusCodeEnum.SERVICE_TEMPORARY_UNAVAILABLE;
-import static vw.be.server.common.IConfigurationConstants.ROUTE_ROOT;
-import static vw.be.server.common.IHttpApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
-import static vw.be.server.common.IHttpApiConstants.HEADER_CONTENT_TYPE;
-import static vw.be.server.common.PersistenceActionEnum.CREATE;
-import static vw.be.server.common.PersistenceActionEnum.DELETE_BY_ID;
-import static vw.be.server.common.PersistenceActionEnum.GET_ALL;
-import static vw.be.server.common.PersistenceActionEnum.GET_BY_ID;
-import static vw.be.server.common.PersistenceActionEnum.MERGE;
-import static vw.be.server.controller.parsers.IQueryParamParser.COMMA_SEPARATED_LIST_PARSER;
-import static vw.be.server.controller.parsers.IQueryParamParser.COMMA_SEPARATED_RANGE_PARSER;
-import static vw.be.server.service.IManageUserService.ID;
-import static vw.be.server.service.IManageUserService.MANAGE_USER_DB_QUEUE;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_ACTION;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_RESPONSE_CODE;
-
-import java.util.Collection;
-import java.util.Map.Entry;
-
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -37,6 +15,18 @@ import vw.be.server.common.PersistenceResponseCodeEnum;
 import vw.be.server.controller.parsers.IQueryParamParser;
 import vw.be.server.exceptions.MalformedQueryException;
 import vw.be.server.service.IManageUserService;
+
+import java.util.Collection;
+import java.util.Map.Entry;
+
+import static vw.be.server.common.HttpStatusCodeEnum.*;
+import static vw.be.server.common.IConfigurationConstants.ROUTE_ROOT;
+import static vw.be.server.common.IHttpApiConstants.APPLICATION_JSON_CHARSET_UTF_8;
+import static vw.be.server.common.IHttpApiConstants.HEADER_CONTENT_TYPE;
+import static vw.be.server.common.PersistenceActionEnum.*;
+import static vw.be.server.controller.parsers.IQueryParamParser.COMMA_SEPARATED_LIST_PARSER;
+import static vw.be.server.controller.parsers.IQueryParamParser.COMMA_SEPARATED_RANGE_PARSER;
+import static vw.be.server.service.IManageUserService.*;
 
 /**
  * Users restful web api vertx asynchronous implementation.
@@ -69,9 +59,18 @@ public class ManageUserRestController implements IManageUserRestController {
 
 	@Override
 	public void getAllUsers(RoutingContext routingContext) {
-		DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(GET_ALL));
+		final String query = routingContext.request().params().get(SEARCH_BY_ALL_NAMES_PARTIAL_PARAMETER);
+		DeliveryOptions options = new DeliveryOptions();
+		JsonObject request = new JsonObject();
 
-		vertx.eventBus().send(MANAGE_USER_DB_QUEUE, new JsonObject(), options, reply -> {
+		if (query != null && !query.isEmpty()) {
+			options.addHeader(PERSISTENCE_ACTION, String.valueOf(GET_BY_FILTER));
+			request.put(SEARCH_BY_ALL_NAMES_PARTIAL_PARAMETER, query);
+		} else {
+			options.addHeader(PERSISTENCE_ACTION, String.valueOf(GET_ALL));
+		}
+
+		vertx.eventBus().send(MANAGE_USER_DB_QUEUE, request, options, reply -> {
 			if (reply.succeeded()) {
 				sendResponseSuccess(OK, routingContext.response(), Json.encodePrettily(reply.result().body()));
 			} else {

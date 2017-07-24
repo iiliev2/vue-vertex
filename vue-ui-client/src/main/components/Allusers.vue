@@ -1,5 +1,6 @@
 <template>
 <div>
+  <search :executeSearch='searchUsers'></search>
   <table id="allusers" v-if="error===''">
     <tr v-for="item in items">
       <td>
@@ -13,10 +14,7 @@
   <div v-else>{{error}}</div>
 
   <router-link :to="'/create_user'" tag="button">Create User</router-link>
-  <delete v-if="checked.length>0"
-    message="Are you sure you want to delete these users?"
-    @delete-accepted="deleteAccepted"
-    @delete-canceleted="deleteCanceled">
+  <delete v-if="checked.length>0" message="Are you sure you want to delete these users?" @delete-accepted="deleteAccepted" @delete-canceleted="deleteCanceled">
   </delete>
 </div>
 </template>
@@ -24,17 +22,20 @@
 <script>
 import config from '../js/index.js'
 import Delete from './Delete.vue'
+import Search from './Search.vue'
 
 export default {
   data() {
     return {
       items: [],
       error: '',
-      checked: []
+      checked: [],
+      searchServiceUrl: 'http://localhost:23002/api/users'
     }
   },
   components: {
-    'delete': Delete
+    'delete': Delete,
+    Search
   },
   methods: {
     'deleteAccepted': function() {
@@ -46,7 +47,7 @@ export default {
       this.getAllUsers()
     },
     'getAllUsers': function() {
-      this.$http.get('http://localhost:23002/api/users')
+      this.$http.get(this.searchServiceUrl)
         .then(response => {
           this.items = response.data;
           this.error = ''
@@ -58,6 +59,23 @@ export default {
     },
     'viewUser': function(user) {
       config.router.push('/user/:' + user.id)
+    },
+    'searchUsers': function(query) {
+      var searchUrl = this.searchServiceUrl;
+
+      if (query) {
+        searchUrl += '?search_by_all_names_partial=' + query;
+      }
+
+      this.$http.get(searchUrl)
+        .then(response => {
+          this.items = response.data;
+          this.error = ''
+        })
+        .catch(error => {
+          this.items = [];
+          this.error = "Could not fetch the users. " + error.message
+        })
     }
   },
   mounted: function() {

@@ -1,10 +1,10 @@
 package vw.be.server.service;
 
-import static vw.be.server.common.PersistenceResponseCodeEnum.CREATED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.DELETED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.FOUND;
-import static vw.be.server.common.PersistenceResponseCodeEnum.MERGED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.NOT_FOUND;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import vw.be.common.dto.UserDTO;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -12,11 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import vw.be.common.dto.UserDTO;
+import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
 /**
  * Repository interface for users. This class is used for mocking purposes,
@@ -94,6 +90,16 @@ public class MockManageUserService implements IManageUserService {
 		} else {
 			replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(FOUND));
 		}
+	}
+
+	@Override
+	public void getUserByFilter(Message<JsonObject> message) {
+		JsonArray allUsers = new JsonArray(
+				users.values().stream().filter(user -> {
+					final String nameFilter = message.body().getString(SEARCH_BY_ALL_NAMES_PARTIAL_PARAMETER);
+					return user.getFirstName().contains(nameFilter) || user.getSurname().contains(nameFilter) || user.getLastName().contains(nameFilter);
+				}).map(UserDTO::toJsonObject).collect(Collectors.toList()));
+		message.reply(allUsers, createResponseHeaders(FOUND));
 	}
 
 	@Override

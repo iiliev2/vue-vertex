@@ -1,29 +1,5 @@
 package vw.be.server.verticle;
 
-import static vw.be.server.common.ITestConstants.MY_APP_TEST_CONFIG_FILE;
-import static vw.be.server.common.ITestConstants.SIMPLE_USER_FOR_CREATION_JSON_FILE;
-import static vw.be.server.common.ITestConstants.SIMPLE_USER_FOR_EDITION_JSON_FILE;
-import static vw.be.server.common.PersistenceActionEnum.CREATE;
-import static vw.be.server.common.PersistenceActionEnum.DELETE_BY_ID;
-import static vw.be.server.common.PersistenceActionEnum.GET_ALL;
-import static vw.be.server.common.PersistenceActionEnum.GET_BY_ID;
-import static vw.be.server.common.PersistenceActionEnum.MERGE;
-import static vw.be.server.common.PersistenceResponseCodeEnum.CREATED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.DELETED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.MERGED;
-import static vw.be.server.common.PersistenceResponseCodeEnum.NOT_FOUND;
-import static vw.be.server.service.IManageUserService.ID;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_ACTION;
-import static vw.be.server.service.IManageUserService.PERSISTENCE_RESPONSE_CODE;
-
-import java.io.IOException;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -34,9 +10,21 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import vw.be.server.common.IOUtils;
 import vw.be.server.common.PersistenceResponseCodeEnum;
 import vw.be.server.service.IManageUserService;
+
+import java.io.IOException;
+
+import static vw.be.server.common.ITestConstants.*;
+import static vw.be.server.common.PersistenceActionEnum.*;
+import static vw.be.server.common.PersistenceResponseCodeEnum.*;
+import static vw.be.server.service.IManageUserService.*;
 
 /**
  * This is our JUnit test for our MONGO/Mock persistence service for user
@@ -188,9 +176,6 @@ public class ManageUserDatabaseVerticleTest {
 								String.valueOf(CREATED).contentEquals(headers.get(PERSISTENCE_RESPONSE_CODE)));
 						JsonObject deleteByIdRequest = new JsonObject().put(ID, createResponseBody);
 						sendRequest(context, deleteByIdRequest, DELETED);
-						for (int i = 0; i < 10; i++) {
-							sendRequest(context, deleteByIdRequest, NOT_FOUND);
-						}
 						async.complete();
 					} else {
 						context.fail(replyOfCreate.cause());
