@@ -5,9 +5,9 @@
   "http.port": 23002,
   "web.api.context": "/api/*",
   "user.web.api.context": "/api/users",
-  /* "db.type": "mongo",
+  "db.type": "mongo",
    "db_name": "vertx",
-   "connection_string": "mongodb://localhost:27017", */
+  "connection_string": "mongodb://localhost:27017",
   "start.monitoring": false,
   "timer.log.period": 60000
 }

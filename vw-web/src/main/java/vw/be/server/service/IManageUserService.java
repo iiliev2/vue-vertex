@@ -21,6 +21,7 @@ public interface IManageUserService {
     String MANAGE_USER_DB_QUEUE = "manage.user.db.queue";
     String PERSISTENCE_ACTION = "action";
     String PERSISTENCE_RESPONSE_CODE = "responseCode";
+    String SEARCH_BY_ALL_NAMES_PARTIAL_PARAMETER = "search_by_all_names_partial";
 
     String ID = "id";
 
@@ -42,6 +43,9 @@ public interface IManageUserService {
                 break;
             case GET_BY_ID:
                 getUserById(message);
+                break;
+            case GET_BY_FILTER:
+                getUserByFilter(message);
                 break;
             case CREATE:
                 createUser(message);
@@ -107,6 +111,13 @@ public interface IManageUserService {
      * @param message get-by-id action to be executed. Id of user that we search.
      */
     void getUserById(Message<JsonObject> message);
+
+    /**
+     * Retrieves a user by id from persistence
+     *
+     * @param message get-by-filter action to be executed. Part of user name that we search.
+     */
+    void getUserByFilter(Message<JsonObject> message);
 
     /**
      * Creates a user in persistence

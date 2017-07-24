@@ -24,7 +24,7 @@
     }
 </script>
 <style>
-    .modal-mask {
+    .modal-mask { 
         position: fixed;
         z-index: 9998;
         top: 0;
