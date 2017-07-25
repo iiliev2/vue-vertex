@@ -1,19 +1,23 @@
 <template>
 <span>
-        <button id="delete-modal" @click="showDelete = true">{{ buttonLabel }}</button>
-        <modal v-if="showDelete">
-            <h3 slot="header">Delete</h3>
-            <div slot="body">{{ message }}</div>
-            <div slot="footer">
-                <button class="modal-default-button" @click="clickedOK()">OK</button>
-                <button class="modal-default-button" @click="clickedCancel()">Cancel</button>
-            </div>
-        </modal>
-    </span>
+  <el-button @click="showDelete = true" class="el-icon-delete"/>
+
+  <el-dialog
+  title="Tips"
+  :visible.sync="showDelete"
+  size="tiny"
+  :before-close="handleClose">
+  <span>{{ message }}</span>
+<span slot="footer" class="dialog-footer">
+  <el-button type="primary" @click="clickedOK()">OK</el-button>
+  <el-button @click="clickedCancel()">Cancel</el-button>
+  </span>
+</el-dialog>
+
+</span>
 </template>
 
 <script>
-import Modal from './Modal.vue'
 export default {
   data() {
     return {
@@ -31,9 +35,6 @@ export default {
       default: 'Delete'
     }
   },
-  components: {
-    'modal': Modal
-  },
   methods: {
     'clickedOK': function() {
       this.$emit('delete-accepted')
@@ -46,4 +47,3 @@ export default {
   }
 }
 </script>
-<style></style>

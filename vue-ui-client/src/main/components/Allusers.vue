@@ -1,55 +1,37 @@
 <template>
 <div>
   <search :executeSearch='searchUsers'></search>
-  <table id="allusers" v-if="error===''">
-    <tr v-for="item in items">
-      <td>
-        <input type="checkbox" :value="item.id" v-model="checked">
-      </td>
-      <div @click="viewUser(item)">
-        <td v-for="value in item">{{value}}</td>
-      </div>
-    </tr>
-  </table>
+  <display-table :tableData='items' @delete-accepted="deleteAccepted" @delete-canceleted="deleteCanceled" v-if="error===''">
+  </display-table>
   <div v-else>{{error}}</div>
 
-  <div class="block">
-    <span class="demonstration">When you have few pages</span>
-    <el-pagination layout="prev, pager, next" :total="50">
-    </el-pagination>
-  </div>
-
   <router-link :to="'/create_user'" tag="button">Create User</router-link>
-  <delete v-if="checked.length>0" message="Are you sure you want to delete these users?" @delete-accepted="deleteAccepted" @delete-canceleted="deleteCanceled">
-  </delete>
+
 </div>
 </template>
 
 <script>
 import config from '../js/index.js'
-import Delete from './Delete.vue'
 import Search from './Search.vue'
+import DisplayTable from './DisplayTable.vue'
 
 export default {
   data() {
     return {
       items: [],
       error: '',
-      checked: [],
       searchServiceUrl: 'http://localhost:23002/api/users'
     }
   },
   components: {
-    'delete': Delete,
-    Search
+    Search,
+    DisplayTable
   },
   methods: {
     'deleteAccepted': function() {
-      this.checked = []
       this.getAllUsers()
     },
     'deleteCanceled': function() {
-      this.checked = []
       this.getAllUsers()
     },
     'getAllUsers': function() {
