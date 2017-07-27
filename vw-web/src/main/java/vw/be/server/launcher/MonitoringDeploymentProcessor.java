@@ -8,9 +8,9 @@ import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
 import io.vertx.ext.dropwizard.Match;
 import vw.be.server.verticle.MonitoringVerticle;
 
-import static vw.be.server.common.IConfigurationConstants.DEFAULT_MONITORING_VERTICLE_COUNT;
-import static vw.be.server.common.IConfigurationConstants.MONITORING_VERTICLE_COUNT_KEY;
 import static vw.be.server.common.IResourceBundleConstants.PROCESSOR_IS_STARTING;
+import static vw.be.server.common.IWebConfigurationConstants.DEFAULT_MONITORING_VERTICLE_COUNT;
+import static vw.be.server.common.IWebConfigurationConstants.MONITORING_VERTICLE_COUNT_KEY;
 import static vw.be.server.service.IManageUserService.MANAGE_USER_DB_QUEUE;
 
 public class MonitoringDeploymentProcessor implements IDeploymentProcessor {
@@ -29,9 +29,9 @@ public class MonitoringDeploymentProcessor implements IDeploymentProcessor {
     private VertxOptions getMonitoringVertxOptions() {
         return getVertxOptions().setMetricsOptions(
                 new DropwizardMetricsOptions().
-                        setEnabled(true).
-                        addMonitoredEventBusHandler(
-                                new Match().setValue(MANAGE_USER_DB_QUEUE)));
+                                                      setEnabled(true).
+                                                      addMonitoredEventBusHandler(
+                                                              new Match().setValue(MANAGE_USER_DB_QUEUE)));
     }
 
     private Future<String> deployMonitoringVerticlesComposition(Vertx VERTX, DeploymentOptions deploymentOptions) {
@@ -39,7 +39,9 @@ public class MonitoringDeploymentProcessor implements IDeploymentProcessor {
             Future<String> monitoringVerticleDeployment = Future.future();
             VERTX.deployVerticle(
                     MonitoringVerticle.class.getName(),
-                    deploymentOptions.setInstances(deploymentOptions.getConfig().getInteger(MONITORING_VERTICLE_COUNT_KEY, DEFAULT_MONITORING_VERTICLE_COUNT)),
+                    deploymentOptions.setInstances(deploymentOptions.getConfig()
+                                                                    .getInteger(MONITORING_VERTICLE_COUNT_KEY,
+                                                                                DEFAULT_MONITORING_VERTICLE_COUNT)),
                     monitoringVerticleDeployment.completer());
 
             return monitoringVerticleDeployment;

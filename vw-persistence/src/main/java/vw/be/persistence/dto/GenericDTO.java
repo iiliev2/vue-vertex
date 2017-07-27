@@ -1,13 +1,13 @@
-package vw.be.common.dto;
+package vw.be.persistence.dto;
 
 import java.io.Serializable;
 import java.time.Instant;
 
-public class GenericDTO implements Serializable{
+public class GenericDTO implements Serializable {
 
-  	private static final long serialVersionUID = 4975400837194252596L;
+    private static final long serialVersionUID = 4975400837194252596L;
 
-	private String id;
+    private String id;
 
     private Long version;
 
@@ -22,7 +22,12 @@ public class GenericDTO implements Serializable{
     public GenericDTO() {
     }
 
-    public GenericDTO(String id, Long version, String createdBy, String editedBy, Instant creationDatetime, Instant editionDatetime) {
+    public GenericDTO(String id,
+                      Long version,
+                      String createdBy,
+                      String editedBy,
+                      Instant creationDatetime,
+                      Instant editionDatetime) {
         this.id = id;
         this.version = version;
         this.createdBy = createdBy;
@@ -82,12 +87,12 @@ public class GenericDTO implements Serializable{
     @Override
     public String toString() {
         return "GenericDTO{" +
-                "id=" + id +
-                ", version=" + version +
-                ", createdBy='" + createdBy + '\'' +
-                ", editedBy='" + editedBy + '\'' +
-                ", creationDatetime=" + creationDatetime +
-                ", editionDatetime=" + editionDatetime +
-                '}';
+               "id=" + id +
+               ", version=" + version +
+               ", createdBy='" + createdBy + '\'' +
+               ", editedBy='" + editedBy + '\'' +
+               ", creationDatetime=" + creationDatetime +
+               ", editionDatetime=" + editionDatetime +
+               '}';
     }
 }

@@ -6,9 +6,9 @@ import io.vertx.core.logging.LoggerFactory;
 import vw.be.server.factory.ManageUserServiceFactory;
 import vw.be.server.service.IManageUserService;
 
-import static vw.be.server.common.IConfigurationConstants.DB_TYPE_KEY;
-import static vw.be.server.common.IConfigurationConstants.MOCK_DB_PROVIDER;
 import static vw.be.server.common.IResourceBundleConstants.DB_VERTICLE_STARTED_OK_MESSAGE;
+import static vw.be.server.common.IWebConfigurationConstants.DB_TYPE_KEY;
+import static vw.be.server.common.IWebConfigurationConstants.MOCK_DB_PROVIDER;
 
 public class ManageUserDatabaseVerticle extends AbstractVerticle {
 

@@ -1,20 +1,38 @@
-package vw.be.common.dto;
+package vw.be.persistence.dto;
 
+import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
 
+@DataObject(generateConverter = true)
 public class UserDTO extends GenericDTO {
 
-	private static final long serialVersionUID = -6693716539159163146L;
+    private static final long serialVersionUID = -6693716539159163146L;
 
-	private String firstName;
+    private String firstName;
 
     private String surname;
 
     private String lastName;
 
     public UserDTO() {
+    }
+
+    public UserDTO(UserDTO other) {
+        this(other.getId(),
+             other.getVersion(),
+             other.getCreatedBy(),
+             other.getEditedBy(),
+             other.getCreationDatetime(),
+             other.getEditionDatetime(),
+             other.firstName,
+             other.surname,
+             other.lastName);
+    }
+
+    public UserDTO(JsonObject json) {
+        UserDTOConverter.fromJson(json, this);
     }
 
     public UserDTO(String firstName, String surname, String lastName) {
@@ -69,28 +87,12 @@ public class UserDTO extends GenericDTO {
 
     @Override
     public String toString() {
-        return "UserDTO{" +
-                "firstName='" + firstName + '\'' +
-                ", surname='" + surname + '\'' +
-                ", lastName='" + lastName + '\'' +
-                '}' +
-                super.toString();
+        return toJson().toString();
     }
 
-    public JsonObject toJsonObject(){
-        return new JsonObject()
-                .put("id", this.getId())
-                .put("version", this.getVersion())
-                .put("createdBy", this.getCreatedBy())
-                .put("editedBy", this.getEditedBy())
-                .put("creationDatetime", this.getCreationDatetime())
-                .put("editionDatetime", this.getEditionDatetime())
-                .put("firstName", this.getFirstName())
-                .put("surname", this.getSurname())
-                .put("lastName", this.getLastName());
-    }
-
-    public String toJsonString(){
-        return toJsonObject().encodePrettily();
+    public JsonObject toJson() {
+        JsonObject result = new JsonObject();
+        UserDTOConverter.toJson(this, result);
+        return result;
     }
 }

@@ -6,8 +6,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.dropwizard.MetricsService;
 
-import static vw.be.server.common.IConfigurationConstants.DEFAULT_TIMER_LOG_PERIOD;
-import static vw.be.server.common.IConfigurationConstants.TIMER_LOG_PERIOD_KEY;
+import static vw.be.server.common.IWebConfigurationConstants.DEFAULT_TIMER_LOG_PERIOD;
+import static vw.be.server.common.IWebConfigurationConstants.TIMER_LOG_PERIOD_KEY;
 
 public class MonitoringVerticle extends AbstractVerticle {
 

@@ -15,3 +15,5 @@
 /./vertx/
 /**/.vertx/
 /**/.vertx/**
+/**/generated
+/**/generated/**

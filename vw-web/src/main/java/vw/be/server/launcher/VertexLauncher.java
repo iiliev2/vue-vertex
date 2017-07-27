@@ -5,8 +5,8 @@ import vw.be.server.common.IOUtils;
 
 import java.util.Objects;
 
-import static vw.be.server.common.IConfigurationConstants.DEFAULT_START_MONITORING;
-import static vw.be.server.common.IConfigurationConstants.START_MONITORING_KEY;
+import static vw.be.server.common.IWebConfigurationConstants.DEFAULT_START_MONITORING;
+import static vw.be.server.common.IWebConfigurationConstants.START_MONITORING_KEY;
 
 public class VertexLauncher {
 
@@ -16,7 +16,8 @@ public class VertexLauncher {
     public static void main(String[] args) {
         DeploymentOptions deploymentOptions = getDeploymentOptions(args);
 
-        final boolean toStartMonitoring = deploymentOptions.getConfig().getBoolean(START_MONITORING_KEY, DEFAULT_START_MONITORING);
+        final boolean toStartMonitoring = deploymentOptions.getConfig()
+                                                           .getBoolean(START_MONITORING_KEY, DEFAULT_START_MONITORING);
 
         initDeploymentProcessor(toStartMonitoring).deploy(deploymentOptions);
     }
@@ -34,7 +35,7 @@ public class VertexLauncher {
 
     private static DeploymentOptions getDeploymentOptions(String[] args) {
         String appConfiguration;
-        if(args != null && args.length == 2 && Objects.equals(args[0], CONF_ARG)) {
+        if (args != null && args.length == 2 && Objects.equals(args[0], CONF_ARG)) {
             appConfiguration = args[1];
         } else {
             appConfiguration = DEFAULT_CONFIGURATION;
@@ -45,8 +46,8 @@ public class VertexLauncher {
                         IOUtils.loadConfiguration(
                                 appConfiguration,
                                 VertexLauncher.class.getClassLoader()
-                        )
-                );
+                                                 )
+                          );
     }
 
 }

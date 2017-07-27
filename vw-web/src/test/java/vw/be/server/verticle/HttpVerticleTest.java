@@ -22,9 +22,9 @@ import vw.be.server.common.IOUtils;
 
 import java.io.IOException;
 
-import static vw.be.server.common.IConfigurationConstants.*;
 import static vw.be.server.common.IHttpApiConstants.*;
 import static vw.be.server.common.ITestConstants.*;
+import static vw.be.server.common.IWebConfigurationConstants.*;
 import static vw.be.server.service.MockManageUserService.FIRST_USER_ID;
 import static vw.be.server.service.MockManageUserService.FIRST_USER_VERSION;
 
@@ -60,23 +60,24 @@ public class HttpVerticleTest {
             JsonObject config = IOUtils.loadConfiguration(
                     MY_APP_TEST_CONFIG_FILE,
                     this.getClass()
-            );
+                                                         );
             removeDBProviderConfiguration(config);
             options = new DeploymentOptions()
                     .setConfig(
                             config
-                    );
+                              );
         }
 
         vertx.deployVerticle(
                 ManageUserDatabaseVerticle.class.getName(),
                 options,
                 res -> vertx.deployVerticle(HttpVerticle.class.getName(), options, context.asyncAssertSuccess())
-        );
+                            );
     }
 
     /**
      * DB provider is removed, because we want to mock persistence service.
+     *
      * @param config test configuration
      */
     private void removeDBProviderConfiguration(JsonObject config) {
@@ -87,6 +88,7 @@ public class HttpVerticleTest {
 
     /**
      * This method, called after our test, just cleanup everything by closing the vert.x instance
+     *
      * @param context the test context
      */
     @After
@@ -96,6 +98,7 @@ public class HttpVerticleTest {
 
     /**
      * Let's ensure that our application behaves correctly.
+     *
      * @param context the test context
      */
     @Test
@@ -108,12 +111,12 @@ public class HttpVerticleTest {
         // Notice that the assertions are made on the 'context' object and are not Junit assert. This ways it manage the
         // async aspect of the test the right way.
         vertx.createHttpClient().getNow(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                WEB_ROOT_CONTEXT,
-                response -> response.handler(body -> {
-                    context.assertTrue(body.toString().contains(INDEX_PAGE_TITLE));
-                    async.complete();
-                }));
+                                        options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                                        WEB_ROOT_CONTEXT,
+                                        response -> response.handler(body -> {
+                                            context.assertTrue(body.toString().contains(INDEX_PAGE_TITLE));
+                                            async.complete();
+                                        }));
     }
 
     @Test
@@ -133,7 +136,8 @@ public class HttpVerticleTest {
 
     @Test
     public void editUser(TestContext context) {
-        final String userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, this.getClass()).toString();
+        final String userToEdit = IOUtils.loadConfiguration(SIMPLE_USER_FOR_EDITION_JSON_FILE, this.getClass())
+                                         .toString();
         manageUser(
                 userToEdit,
                 (options.getConfig().getString(
@@ -141,7 +145,8 @@ public class HttpVerticleTest {
                 editUserHttpClientResponseHandler(
                         context,
                         HttpStatusCodeEnum.NOT_FOUND,
-                        e -> {}));
+                        e -> {
+                        }));
 
     }
 
@@ -149,77 +154,91 @@ public class HttpVerticleTest {
     public void getAllUsers(TestContext context) {
         Async async = context.async();
         vertx.createHttpClient().get(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                (options.getConfig().getString(
-                        USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)))
-                .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-                .handler(response -> {
-                    context.assertEquals(response.statusCode(), HttpStatusCodeEnum.OK.getStatusCode());
-                    context.assertTrue(response.headers().get(HEADER_CONTENT_TYPE).contains(APPLICATION_JSON_CHARSET_UTF_8));
-                    response.bodyHandler(body -> {
-                        context.assertNotNull(body);
-                        context.assertFalse(body.toJsonArray().isEmpty());
-                        async.complete();
-                    }).exceptionHandler(defineThrowableHandler(context));
-                })
-                .end();
+                                     options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                                     (options.getConfig().getString(
+                                             USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE)))
+             .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
+             .handler(response -> {
+                 context.assertEquals(response.statusCode(), HttpStatusCodeEnum.OK.getStatusCode());
+                 context.assertTrue(response.headers()
+                                            .get(HEADER_CONTENT_TYPE)
+                                            .contains(APPLICATION_JSON_CHARSET_UTF_8));
+                 response.bodyHandler(body -> {
+                     context.assertNotNull(body);
+                     context.assertFalse(body.toJsonArray().isEmpty());
+                     async.complete();
+                 }).exceptionHandler(defineThrowableHandler(context));
+             })
+             .end();
     }
 
     @Test
     public void getUserById(TestContext context) {
         Async async = context.async();
         vertx.createHttpClient().get(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                (options.getConfig().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) + URL_CONTEXT_SEPARATOR + FIRST_USER_ID))
-                .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-                .handler(response -> {
-                    boolean isOKHttpStatus = ( response.statusCode() == HttpStatusCodeEnum.OK.getStatusCode() );
-                    context.assertTrue( (response.statusCode() == HttpStatusCodeEnum.NOT_FOUND.getStatusCode() || isOKHttpStatus) );
-                    response.bodyHandler(body -> {
-                        if (isOKHttpStatus) {
-                            final UserDTO user = Json.decodeValue(body.toString(), UserDTO.class);
-                            context.assertNotNull(user.getId());
-                            context.assertEquals(user.getId(), FIRST_USER_ID);
-                            context.assertEquals(user.getVersion(), FIRST_USER_VERSION);
-                        }
-                        async.complete();
-                    }).exceptionHandler(defineThrowableHandler(context));
-                })
-                .end();
+                                     options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                                     (options.getConfig()
+                                             .getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) +
+                                      URL_CONTEXT_SEPARATOR +
+                                      FIRST_USER_ID))
+             .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
+             .handler(response -> {
+                 boolean isOKHttpStatus = (response.statusCode() == HttpStatusCodeEnum.OK.getStatusCode());
+                 context.assertTrue((response.statusCode() == HttpStatusCodeEnum.NOT_FOUND.getStatusCode() ||
+                                     isOKHttpStatus));
+                 response.bodyHandler(body -> {
+                     if (isOKHttpStatus) {
+                         final UserDTO user = Json.decodeValue(body.toString(), UserDTO.class);
+                         context.assertNotNull(user.getId());
+                         context.assertEquals(user.getId(), FIRST_USER_ID);
+                         context.assertEquals(user.getVersion(), FIRST_USER_VERSION);
+                     }
+                     async.complete();
+                 }).exceptionHandler(defineThrowableHandler(context));
+             })
+             .end();
     }
 
     @Test
     public void deleteUserBySuccessfulyId(TestContext context) {
         Async async = context.async();
         vertx.createHttpClient().delete(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                (options.getConfig().getString(USER_WEB_API_CONTEXT_KEY, DEFAULT_USER_WEB_API_CONTEXT_VALUE) + URL_CONTEXT_SEPARATOR + FIRST_USER_ID))
-                .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-                .handler(response -> {
-                    context.assertEquals(response.statusCode(), HttpStatusCodeEnum.NO_CONTENT.getStatusCode());
-                    async.complete();
-                })
-                .end();
+                                        options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                                        (options.getConfig()
+                                                .getString(USER_WEB_API_CONTEXT_KEY,
+                                                           DEFAULT_USER_WEB_API_CONTEXT_VALUE) +
+                                         URL_CONTEXT_SEPARATOR +
+                                         FIRST_USER_ID))
+             .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
+             .handler(response -> {
+                 context.assertEquals(response.statusCode(), HttpStatusCodeEnum.NO_CONTENT.getStatusCode());
+                 async.complete();
+             })
+             .end();
     }
 
-    private void manageUser(String fileContent, String operationURL, Handler<HttpClientResponse> clientResponseHandler) {
+    private void manageUser(String fileContent,
+                            String operationURL,
+                            Handler<HttpClientResponse> clientResponseHandler) {
         vertx.createHttpClient().post(options.getConfig().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
-                operationURL)
-                .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
-                .putHeader(HEADER_CONTENT_LENGTH, Integer.toString(fileContent.length()))
-                .handler(clientResponseHandler)
-                .write(fileContent)
-                .end();
+                                      options.getConfig().getString(APP_HTTP_HOST_KEY, DEFAULT_HOST),
+                                      operationURL)
+             .putHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8)
+             .putHeader(HEADER_CONTENT_LENGTH, Integer.toString(fileContent.length()))
+             .handler(clientResponseHandler)
+             .write(fileContent)
+             .end();
     }
 
-    private Handler<HttpClientResponse> addUserHttpClientResponseHandler(TestContext context, HttpStatusCodeEnum statusCode, Handler<Buffer> bodyHandler) {
+    private Handler<HttpClientResponse> addUserHttpClientResponseHandler(TestContext context,
+                                                                         HttpStatusCodeEnum statusCode,
+                                                                         Handler<Buffer> bodyHandler) {
         return response -> {
             context.assertEquals(response.statusCode(), statusCode.getStatusCode());
             context.assertTrue(response.headers().get(HEADER_CONTENT_TYPE).contains(APPLICATION_JSON_CHARSET_UTF_8));
             response.
-                    bodyHandler(bodyHandler).
-                    exceptionHandler(defineThrowableHandler(context));
+                            bodyHandler(bodyHandler).
+                            exceptionHandler(defineThrowableHandler(context));
         };
     }
 
@@ -231,18 +250,20 @@ public class HttpVerticleTest {
         };
     }
 
-    private Handler<HttpClientResponse> editUserHttpClientResponseHandler(TestContext context, HttpStatusCodeEnum statusCode, Handler<Buffer> bodyHandler) {
+    private Handler<HttpClientResponse> editUserHttpClientResponseHandler(TestContext context,
+                                                                          HttpStatusCodeEnum statusCode,
+                                                                          Handler<Buffer> bodyHandler) {
         return response -> {
             context.assertEquals(response.statusCode(), statusCode.getStatusCode());
             response.
-                    bodyHandler(bodyHandler).
-                    exceptionHandler(defineThrowableHandler(context));
+                            bodyHandler(bodyHandler).
+                            exceptionHandler(defineThrowableHandler(context));
         };
     }
 
     private Handler<Throwable> defineThrowableHandler(TestContext context) {
         return exception -> {
-            if(exception != null){
+            if (exception != null) {
                 context.fail();
             }
         };

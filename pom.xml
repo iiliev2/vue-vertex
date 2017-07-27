@@ -13,11 +13,16 @@
         <module>vue-ui-client</module>
         <module>vw-common</module>
         <module>vw-persistence</module>
+        <module>vw-persistence-inmem</module>
+        <module>vw-persistence-mongodb</module>
         <module>vw-web</module>
+        <module>vw-monigoring</module>
+        <module>vw-restapi</module>
     </modules>
 
     <properties>
-        <vertx.version>3.4.2</vertx.version>
+        <stack.version>3.4.2</stack.version>
+        <vertx.version>${stack.version}</vertx.version>
         <!-- The main verticle, i.e. the entry point of your application.
         Used when the Main-Class is io.vertx.core.Launcher - must be overridden-->
         <vertx.verticle/>
@@ -38,6 +43,55 @@
         </dependencies>
     </dependencyManagement>
 
+    <dependencies>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-service-proxy</artifactId>
+            <classifier>processor</classifier>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-lang-groovy</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-codegen</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-sockjs-service-proxy</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-hazelcast</artifactId>
+        </dependency>
+
+        <!-- Microservice toolbox -->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-service-discovery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-circuit-breaker</artifactId>
+        </dependency>
+    </dependencies>
+
     <build>
         <pluginManagement>
             <plugins>
@@ -47,6 +101,8 @@
                     <configuration>
                         <source>1.8</source>
                         <target>1.8</target>
+                        <generatedSourcesDirectory>src/main/generated</generatedSourcesDirectory>
+                        <generatedTestSourcesDirectory>src/test/generated</generatedTestSourcesDirectory>
                     </configuration>
                 </plugin>
                 <plugin>

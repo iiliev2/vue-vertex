@@ -1,4 +1,10 @@
-package vw.be.server.service;
+package vw.be.persistence.mongodb;
+
+import vw.be.persistence.service.IManageUserService;
+
+public class MongoDBUserService implements IManageUserService {
+}
+/*package vw.be.server.service;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
@@ -9,9 +15,7 @@ import io.vertx.ext.mongo.MongoClient;
 import static vw.be.server.common.ApplicationErrorCodes.DB_ERROR;
 import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
-/**
- * Repository interface for users. MongoDB implementation.
- */
+
 public class MongoManageUserService implements IManageUserService {
 
     private static final String COLLECTION = "user";
@@ -49,18 +53,21 @@ public class MongoManageUserService implements IManageUserService {
 
     @Override
     public void getUserById(Message<JsonObject> message) {
-        mongoClient.findOne(COLLECTION, new JsonObject().put(USER_ID, message.body().getString(ID)), null, findUserResultHandler -> {
-            if (findUserResultHandler.succeeded()) {
-                JsonObject jsonUser = findUserResultHandler.result();
-                if (jsonUser == null || jsonUser.isEmpty()) {
-                    replyMessage(message, null, createResponseHeaders(NOT_FOUND));
-                } else {
-                    replyMessage(message, jsonUser, createResponseHeaders(FOUND));
-                }
-            } else {
-                failMessage(message, DB_ERROR, findUserResultHandler.cause().getMessage());
-            }
-        });
+        mongoClient.findOne(COLLECTION,
+                            new JsonObject().put(USER_ID, message.body().getString(ID)),
+                            null,
+                            findUserResultHandler -> {
+                                if (findUserResultHandler.succeeded()) {
+                                    JsonObject jsonUser = findUserResultHandler.result();
+                                    if (jsonUser == null || jsonUser.isEmpty()) {
+                                        replyMessage(message, null, createResponseHeaders(NOT_FOUND));
+                                    } else {
+                                        replyMessage(message, jsonUser, createResponseHeaders(FOUND));
+                                    }
+                                } else {
+                                    failMessage(message, DB_ERROR, findUserResultHandler.cause().getMessage());
+                                }
+                            });
     }
 
     @Override
@@ -68,20 +75,29 @@ public class MongoManageUserService implements IManageUserService {
         final String queryParam = message.body().getString(SEARCH_BY_ALL_NAMES_PARTIAL_PARAMETER);
         JsonObject query = new JsonObject()
                 .put(OR_PERSISTENCE_OPERATOR,
-                        new JsonArray()
-                                .add(new JsonObject().put(FIRST_NAME_COLUMN,
-                                        new JsonObject()
-                                                .put(REGEX_OPERATOR, (LIKE_WILDCARD_OPERATOR + queryParam + LIKE_WILDCARD_OPERATOR))
-                                ))
-                                .add(new JsonObject().put(SURNAME_COLUMN,
-                                        new JsonObject()
-                                                .put(REGEX_OPERATOR, (LIKE_WILDCARD_OPERATOR + queryParam + LIKE_WILDCARD_OPERATOR))
-                                ))
-                                .add(new JsonObject().put(LAST_NAME_COLUMN,
-                                        new JsonObject()
-                                                .put(REGEX_OPERATOR, (LIKE_WILDCARD_OPERATOR + queryParam + LIKE_WILDCARD_OPERATOR))
-                                ))
-                );
+                     new JsonArray()
+                             .add(new JsonObject().put(FIRST_NAME_COLUMN,
+                                                       new JsonObject()
+                                                               .put(REGEX_OPERATOR,
+                                                                    (LIKE_WILDCARD_OPERATOR +
+                                                                     queryParam +
+                                                                     LIKE_WILDCARD_OPERATOR))
+                                                      ))
+                             .add(new JsonObject().put(SURNAME_COLUMN,
+                                                       new JsonObject()
+                                                               .put(REGEX_OPERATOR,
+                                                                    (LIKE_WILDCARD_OPERATOR +
+                                                                     queryParam +
+                                                                     LIKE_WILDCARD_OPERATOR))
+                                                      ))
+                             .add(new JsonObject().put(LAST_NAME_COLUMN,
+                                                       new JsonObject()
+                                                               .put(REGEX_OPERATOR,
+                                                                    (LIKE_WILDCARD_OPERATOR +
+                                                                     queryParam +
+                                                                     LIKE_WILDCARD_OPERATOR))
+                                                      ))
+                    );
         mongoClient.find(COLLECTION, query, findAllResultHandler -> {
             if (findAllResultHandler.succeeded()) {
                 JsonArray foundUsers = new JsonArray(findAllResultHandler.result());
@@ -129,3 +145,4 @@ public class MongoManageUserService implements IManageUserService {
     }
 
 }
+*/
