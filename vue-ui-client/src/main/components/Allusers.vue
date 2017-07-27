@@ -1,12 +1,9 @@
 <template>
 <div>
   <search :executeSearch='searchUsers'></search>
-  <display-table :tableData='items' @delete-accepted="deleteAccepted" @delete-canceleted="deleteCanceled" v-if="error===''">
+  <display-table :tableData='items' @delete-accepted="deleteAccepted" v-if="error===''" :executeSave='saveUser'>
   </display-table>
   <div v-else>{{error}}</div>
-
-  <router-link :to="'/create_user'" tag="button">Create User</router-link>
-
 </div>
 </template>
 
@@ -20,7 +17,7 @@ export default {
     return {
       items: [],
       error: '',
-      searchServiceUrl: 'http://localhost:23002/api/users'
+      searchServiceUrl: 'http://10.82.200.203:23002/api/users'
     }
   },
   components: {
@@ -29,9 +26,6 @@ export default {
   },
   methods: {
     'deleteAccepted': function() {
-      this.getAllUsers()
-    },
-    'deleteCanceled': function() {
       this.getAllUsers()
     },
     'getAllUsers': function() {
@@ -64,7 +58,17 @@ export default {
           this.items = [];
           this.error = "Could not fetch the users. " + error.message
         })
-    }
+    },
+    saveUser(user) {
+          this.$http.post(this.searchServiceUrl + "/" + user['_id'], user)
+              .then(response => {
+                  this.items.reverse();
+              })
+              .catch(error => {
+                  this.items = [];
+                  this.error = "Could not fetch the users. " + error.message
+              })
+      }
   },
   mounted: function() {
     this.getAllUsers()
