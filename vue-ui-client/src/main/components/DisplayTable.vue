@@ -19,20 +19,21 @@
                     <el-button
                             :id="'savebutton-' + scope.$index"
                             size="small"
-                            v-on:click.prevent="executeSave(scope.row)" class="el-icon-edit component-display-nonvisible"/>
+                            v-on:click.prevent="handleEdit(scope.$index, scope.row)"
+                            class="el-icon-edit component-display-nonvisible"/>
                 </template>
             </el-table-column>
         </el-table>
-
+        <!--Pagination-->
         <span class="block">
-    <el-pagination layout="prev, pager, next, slot" :total="1">
-      <span>
-      <el-button size="small" @click="createNewTableRow()" class="el-icon-edit"/>
-      <delete v-if="checked.length>0" message="Are you sure you want to delete these users?"
-              @delete-accepted="deleteAccepted"/>
+            <el-pagination layout="prev, pager, next, slot" :total="1">
+              <span>
+              <el-button size="small" @click="createNewTableRow()" class="el-icon-edit"/>
+              <delete v-if="checked.length>0" message="Are you sure you want to delete these users?"
+                      @delete-accepted="deleteAccepted"/>
+              </span>
+            </el-pagination>
       </span>
-    </el-pagination>
-  </span>
     </div>
 </template>
 
@@ -60,10 +61,6 @@
             'tableData': {
                 type: Array,
                 required: true
-            },
-            'executeSave': {
-                type: Function,
-                required: true
             }
         },
         methods: {
@@ -71,14 +68,25 @@
                 this.$emit('delete-accepted');
             },
             handleCellFocus(event) {
-                if(event.target !== this.currentCell){
+                if (event.target !== this.currentCell) {
                     this.currentCell = event.target;
                 }
             },
             handleCellChange(event, index) {
-                let elementById = document.getElementById('savebutton-' + index);
-                elementById.className = elementById.className.replace("component-display-nonvisible", "component-display-visible");
-                this.currentCell.className += " changed-input-text";
+                this.manageCurrentRowEditButtonStyleClasses(index, "component-display-nonvisible", "component-display-visible");
+
+                let currentCellClassName = this.currentCell.className;
+                if (currentCellClassName.indexOf("changed-input-text") === -1) {
+                    this.currentCell.className += " changed-input-text";
+                }
+            },
+            handleEdit(index, row) {
+                let currentCellStyleClass = this.currentCell.className;
+                this.currentCell.className = currentCellStyleClass.replace("changed-input-text", "");
+
+                this.manageCurrentRowEditButtonStyleClasses(index, "component-display-visible", "component-display-nonvisible");
+
+                this.$emit('edit-executed', index, row);
             },
             handleDelete(index, row) {
                 alert("Delete current not implemented, yet!");
@@ -88,6 +96,10 @@
             },
             createNewTableRow() {
                 this.tableData.push("");
+            },
+            manageCurrentRowEditButtonStyleClasses(index, oldStyleClass, newStyleClass) {
+                let elementById = document.getElementById('savebutton-' + index);
+                elementById.className = elementById.className.replace(oldStyleClass, newStyleClass);
             }
         },
         filters: {
@@ -108,9 +120,11 @@
     .component-display-nonvisible {
         display: none
     }
+
     .component-display-visible {
         display: inline;
     }
+
     .changed-input-text {
         border: 2px solid green;
         border-radius: 4px;

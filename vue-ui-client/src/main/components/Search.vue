@@ -3,10 +3,14 @@
   <!-- The search field -->
   <form class="form-horizontal">
     <div class="input-group">
-      <input id="queryField" v-model.trim="query" v-on:keypress.enter.prevent="executeSearch(query)" type="search" placeholder="please enter your query here." autofocus />
-      <div title="Search for users">
-        <button id="searchButton" type="button" v-on:click.prevent="executeSearch(query)">Search</button>
-      </div>
+      <el-input
+              placeholder="Please type here"
+              icon="search"
+              v-model.trim="query"
+              :on-icon-click="handleIconClick"
+              :keypress.enter.prevent="executeSearch(query)"
+              autofocus style="width: 200px">
+      </el-input>
     </div>
   </form>
 </div>
@@ -24,6 +28,11 @@ export default {
       type: Function,
       required: true
     }
+  },
+  methods: {
+      handleIconClick(ev) {
+          this.executeSearch(this.query);
+      }
   }
 }
 </script>

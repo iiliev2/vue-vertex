@@ -52,7 +52,7 @@ public class ManageUserRestController implements IManageUserRestController {
 		restAPIRouter.post(ROUTE_ROOT).handler(this::addUser);
 		restAPIRouter.delete(ROUTE_ROOT).handler(this::delete);
 		restAPIRouter.put(ROUTE_ROOT).handler(this::replaceAllUsers);
-		restAPIRouter.post(USER_BY_ID_SUB_CONTEXT).handler(this::editUser);
+		restAPIRouter.put(USER_BY_ID_SUB_CONTEXT).handler(this::editUser);
 		restAPIRouter.get(USER_BY_ID_SUB_CONTEXT).handler(this::getUserById);
 		restAPIRouter.delete(USER_BY_ID_SUB_CONTEXT).handler(this::deleteUserById);
 	}
@@ -132,7 +132,7 @@ public class ManageUserRestController implements IManageUserRestController {
 			DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(MERGE));
 			vertx.eventBus().send(MANAGE_USER_DB_QUEUE, requestBody.put(ID, uriUserID), options, reply -> {
 				if (reply.succeeded()) {
-					replySucceeded(response, reply.result(), NO_CONTENT);
+					replySucceeded(response, reply.result(), OK);
 				} else {
 					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 				}
