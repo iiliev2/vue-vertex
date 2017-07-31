@@ -19,7 +19,7 @@
                     <el-button
                             :id="'savebutton-' + scope.$index"
                             size="small"
-                            v-on:click.prevent="handleEdit(scope.$index, scope.row)"
+                            v-on:click.prevent="handleCreateOrEdit(scope.$index, scope.row)"
                             class="el-icon-edit component-display-nonvisible"/>
                 </template>
             </el-table-column>
@@ -51,7 +51,8 @@
                     {colname: 'lastName', editable: true}
                 ],
                 checked: [],
-                currentCell: Object
+                currentCell: Object,
+                changedCells: [],
             }
         },
         components: {
@@ -79,27 +80,53 @@
                 if (currentCellClassName.indexOf("changed-input-text") === -1) {
                     this.currentCell.className += " changed-input-text";
                 }
+                if (this.changedCells.indexOf(this.currentCell) === -1) {
+                    this.changedCells.push(this.currentCell);
+                }
             },
-            handleEdit(index, row) {
-                let currentCellStyleClass = this.currentCell.className;
-                this.currentCell.className = currentCellStyleClass.replace("changed-input-text", "");
+            handleCreateOrEdit(index, row) {
+                if (row[this.tableColumns[0].colname]){
+                    this.emitEdit(index, row);
+                } else {
+                    this.emitCreate(index, row);
+                }
+            },
+            emitEdit(index, row) {
+                this.resetChangedCellsStyleClass();
 
                 this.manageCurrentRowEditButtonStyleClasses(index, "component-display-visible", "component-display-nonvisible");
 
                 this.$emit('edit-executed', index, row);
             },
+            emitCreate(index, row) {
+                this.resetChangedCellsStyleClass();
+
+                this.manageCurrentRowEditButtonStyleClasses(index, "component-display-visible", "component-display-nonvisible");
+
+                this.$emit('create-executed', index, row);
+            },
             handleDelete(index, row) {
-                alert("Delete current not implemented, yet!");
+                this.$emit('delete-executed', index, row);
             },
             handleSelectionChange(val) {
                 this.checked = val;
             },
             createNewTableRow() {
-                this.tableData.push("");
+                let columnNames = this.tableColumns.map(function(tableColumnElement) {
+                    return tableColumnElement.colname;
+                });
+                let ui = JSON.stringify(columnNames).replace(/\[|\]/g, "").replace(/,/g, ':"",');
+                ui = '{' + ui + ':""}';
+                this.tableData.push(JSON.parse(ui));
             },
             manageCurrentRowEditButtonStyleClasses(index, oldStyleClass, newStyleClass) {
                 let elementById = document.getElementById('savebutton-' + index);
                 elementById.className = elementById.className.replace(oldStyleClass, newStyleClass);
+            },
+            resetChangedCellsStyleClass() {
+                this.changedCells.forEach(function (tableCell) {
+                    tableCell.className = tableCell.className.replace("changed-input-text", "");
+                });
             }
         },
         filters: {

@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 
+import java.time.Instant;
+
 import static vw.be.server.common.ApplicationErrorCodes.DB_ERROR;
 import static vw.be.server.common.PersistenceResponseCodeEnum.*;
 
@@ -23,6 +25,12 @@ public class MongoManageUserService implements IManageUserService {
     private static final String FIRST_NAME_COLUMN = "firstName";
     private static final String SURNAME_COLUMN = "surname";
     private static final String LAST_NAME_COLUMN = "lastName";
+    private static final String VERSION_NAME_COLUMN = "version";
+    private static final String CREATED_BY_NAME_COLUMN = "createdBy";
+    private static final String DEFAULT_USERNAME = "Admin";
+    private static final String CREATION_DATETIME_NAME_COLUMN = "creationDatetime";
+    private static final String EDITED_BY_NAME_COLUMN = "editedBy";
+    private static final String EDITION_DATETIME_NAME_COLUMN = "editionDatetime";
 
     private MongoClient mongoClient;
 
@@ -94,6 +102,13 @@ public class MongoManageUserService implements IManageUserService {
 
     @Override
     public void createUser(Message<JsonObject> message) {
+        final JsonObject messageBody = message.body();
+        setUserVersion(messageBody);
+        messageBody.remove(USER_ID);
+        messageBody.put(CREATED_BY_NAME_COLUMN, DEFAULT_USERNAME);
+        messageBody.put(CREATION_DATETIME_NAME_COLUMN, Instant.now());
+        messageBody.putNull(EDITED_BY_NAME_COLUMN);
+        messageBody.putNull(EDITION_DATETIME_NAME_COLUMN);
         mongoClient.insert(COLLECTION, message.body(), res -> {
             if (res.succeeded()) {
                 replyMessage(message, res.result(), createResponseHeaders(CREATED));
@@ -103,13 +118,22 @@ public class MongoManageUserService implements IManageUserService {
         });
     }
 
+    private void setUserVersion(JsonObject messageBody) {
+        final Object version = messageBody.getValue(VERSION_NAME_COLUMN);
+        messageBody.put(VERSION_NAME_COLUMN, (version == null || !version.getClass().isInstance(0) ? 1 : (int)version + 1));
+    }
+
     @Override
     public void updateUser(Message<JsonObject> message) {
-        JsonObject query = new JsonObject().put(USER_ID, message.body().remove(ID));
-        JsonObject forUpdate = new JsonObject().put(SET_PERSISTENCE_OPERATOR, message.body());
+        final JsonObject messageBody = message.body();
+        setUserVersion(messageBody);
+        messageBody.put(EDITED_BY_NAME_COLUMN, DEFAULT_USERNAME);
+        messageBody.put(EDITION_DATETIME_NAME_COLUMN, Instant.now());
+        JsonObject query = new JsonObject().put(USER_ID, messageBody.remove(ID));
+        JsonObject forUpdate = new JsonObject().put(SET_PERSISTENCE_OPERATOR, messageBody);
         mongoClient.findOneAndUpdate(COLLECTION, query, forUpdate, res -> {
             if (res.succeeded()) {
-                replyMessage(message, null, createResponseHeaders(MERGED));
+                replyMessage(message, forUpdate, createResponseHeaders(MERGED));
             } else {
                 failMessage(message, DB_ERROR, res.cause().getMessage());
             }

@@ -16,7 +16,6 @@ import io.vertx.ext.web.handler.StaticHandler;
 import vw.be.server.controller.ManageUserRestController;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -95,7 +94,7 @@ public class HttpVerticle extends AbstractVerticle {
     }
 
     private Set<HttpMethod> defineAllowedCORSHttpMethods() {
-        return new HashSet<>(Collections.singletonList(HttpMethod.GET));
+        return new HashSet<>(Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE));
     }
 
     private Set<String> defineAllowedCORSHeaders() {
