@@ -28,7 +28,8 @@
         },
         methods: {
             'deleteAccepted': function () {
-                this.getAllUsers()
+                alert("Delete selected is not implemented, yet!");
+                //this.getAllUsers()
             },
             'getAllUsers': function () {
                 this.$http.get(this.searchServiceUrl)
