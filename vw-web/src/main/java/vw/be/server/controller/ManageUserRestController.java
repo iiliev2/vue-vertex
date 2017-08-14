@@ -108,7 +108,8 @@ public class ManageUserRestController implements IManageUserRestController {
 			DeliveryOptions options = new DeliveryOptions().addHeader(PERSISTENCE_ACTION, String.valueOf(CREATE));
 			vertx.eventBus().send(IManageUserService.MANAGE_USER_DB_QUEUE, requestBody, options, reply -> {
 				if (reply.succeeded()) {
-					sendResponseSuccess(HttpStatusCodeEnum.CREATED, response, reply.result().body().toString());
+					replySucceeded(response, reply.result(), CREATED);
+					//sendResponseSuccess(HttpStatusCodeEnum.CREATED, response, reply.result());
 				} else {
 					sendResponse(SERVICE_TEMPORARY_UNAVAILABLE, routingContext.response());
 				}

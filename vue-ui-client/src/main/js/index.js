@@ -4,7 +4,7 @@ import axios from 'axios'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
 import App from './../components/App.vue'
-import Allusers from './../components/Allusers.vue'
+import Allusers from '../components/BrowseUsers.vue'
 import Createuser from './../components/Createuser.vue'
 import Viewuser from './../components/Viewuser.vue'
 Vue.use(axios)

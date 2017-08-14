@@ -111,7 +111,7 @@ public class MongoManageUserService implements IManageUserService {
         messageBody.putNull(EDITION_DATETIME_NAME_COLUMN);
         mongoClient.insert(COLLECTION, message.body(), res -> {
             if (res.succeeded()) {
-                replyMessage(message, res.result(), createResponseHeaders(CREATED));
+                replyMessage(message, messageBody.put(USER_ID, res.result()), createResponseHeaders(CREATED));
             } else {
                 failMessage(message, DB_ERROR, res.cause().getMessage());
             }
@@ -133,7 +133,7 @@ public class MongoManageUserService implements IManageUserService {
         JsonObject forUpdate = new JsonObject().put(SET_PERSISTENCE_OPERATOR, messageBody);
         mongoClient.findOneAndUpdate(COLLECTION, query, forUpdate, res -> {
             if (res.succeeded()) {
-                replyMessage(message, forUpdate, createResponseHeaders(MERGED));
+                replyMessage(message, messageBody, createResponseHeaders(MERGED));
             } else {
                 failMessage(message, DB_ERROR, res.cause().getMessage());
             }

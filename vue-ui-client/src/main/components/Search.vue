@@ -8,9 +8,9 @@
               icon="search"
               v-model.trim="query"
               :on-icon-click="handleIconClick"
-              :keypress.enter.prevent="executeSearch(query)"
-              autofocus style="width: 200px">
-      </el-input>
+              :keypress="handleExecuteSearch(query)"
+              autofocus style="width: 200px"
+              auto-complete="on"/>
     </div>
   </form>
 </div>
@@ -31,6 +31,12 @@ export default {
   },
   methods: {
       handleIconClick(ev) {
+          this.executeSearch(this.query);
+      },
+      handleExecuteSearch(query) {
+          let queryLength = query.length;
+          if (queryLength > 0 && queryLength < 3) return;
+
           this.executeSearch(this.query);
       }
   }

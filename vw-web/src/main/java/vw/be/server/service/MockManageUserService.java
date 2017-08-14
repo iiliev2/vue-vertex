@@ -108,7 +108,7 @@ public class MockManageUserService implements IManageUserService {
 		UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
 		userDTO.setUserId(maxUserId.map(value -> String.valueOf(Long.valueOf(value) + 1)).orElse(FIRST_USER_ID));
 		users.put(userDTO.getId(), userDTO);
-		replyMessage(message, userDTO.getId(), createResponseHeaders(CREATED));
+		replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(CREATED));
 	}
 
 	@Override
@@ -121,7 +121,7 @@ public class MockManageUserService implements IManageUserService {
 			UserDTO userDTO = Json.decodeValue(message.body().toString(), UserDTO.class);
 			userDTO.setVersion(oldUserVersion.getVersion() + 1);
 			users.replace(userDTO.getId(), userDTO);
-			replyMessage(message, null, createResponseHeaders(MERGED));
+			replyMessage(message, userDTO.toJsonObject(), createResponseHeaders(MERGED));
 		}
 	}
 

@@ -8,7 +8,7 @@
     </div>
 </template>
 <script>
-    import Delete from './Delete.vue'
+    import Delete from './DialogModal.vue'
     import config from '../js/index.js'
     export default {
         components: {

@@ -7,7 +7,7 @@
                              :label="columnItem.colname | removeSpecialChars | capitalize">
                 <template scope="props">
                     <el-input v-model='props.row[columnItem.colname]' :readonly='!columnItem.editable'
-                              @focus="handleCellFocus" @change="handleCellChange(event, props.$index)"/>
+                              @focus="handleCellFocus" @change="handleCellChange(props.$index)"/>
                 </template>
             </el-table-column>
             <el-table-column label="Operations">
@@ -29,8 +29,8 @@
             <el-pagination layout="prev, pager, next, slot" :total="1">
               <span>
               <el-button size="small" @click="createNewTableRow()" class="el-icon-edit"/>
-              <delete v-if="checked.length>0" message="Are you sure you want to delete these users?"
-                      @delete-accepted="deleteAccepted"/>
+              <dialogModal v-if="checked.length>0" message="Are you sure you want to delete these users?"
+                      invokeButtonIcon="el-icon-delete" @accepted="deleteAccepted"/>
               </span>
             </el-pagination>
       </span>
@@ -38,34 +38,31 @@
 </template>
 
 <script>
-    import Delete from './Delete.vue'
+    import DialogModal from './DialogModal.vue'
 
     export default {
         data() {
             return {
-                tableColumns: [
-                    {colname: '_id', editable: false},
-                    {colname: 'version', editable: false},
-                    {colname: 'firstName', editable: true},
-                    {colname: 'surname', editable: true},
-                    {colname: 'lastName', editable: true}
-                ],
                 checked: [],
                 currentCell: Object,
                 changedCells: [],
             }
         },
         components: {
-            Delete
+            DialogModal
         },
         props: {
-            'tableData': {
+            tableData: {
+                type: Array,
+                required: true
+            },
+            tableColumns: {
                 type: Array,
                 required: true
             }
         },
         methods: {
-            'deleteAccepted': function () {
+            deleteAccepted: function () {
                 this.$emit('delete-accepted');
             },
             handleCellFocus(event) {
@@ -73,7 +70,7 @@
                     this.currentCell = event.target;
                 }
             },
-            handleCellChange(event, index) {
+            handleCellChange(index) {
                 this.manageCurrentRowEditButtonStyleClasses(index, "component-display-nonvisible", "component-display-visible");
 
                 let currentCellClassName = this.currentCell.className;
