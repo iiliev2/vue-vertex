@@ -20,6 +20,7 @@
                 users: [],
                 error: '',
                 serviceState: '',
+                messagePattern: 'User ',
                 serviceUrl: 'http://10.82.200.203:23002/api/users',
                 visibleColumns: [
                     {colname: '_id', editable: false},
@@ -38,55 +39,79 @@
             deleteAccepted() {
                 alert("Delete selected is not implemented, yet!");
             },
+            setServiceState(serviceState) {
+                this.serviceState = serviceState;
+            },
+            setServiceMessagePattern(messagePattern) {
+                this.messagePattern = messagePattern;
+            },
+            resetServiceMessage() {
+                this.setServiceState('');
+                this.setServiceMessagePattern('User ');
+            },
             getAllUsers() {
+                this.setServiceState('loaded');
+                this.setServiceMessagePattern('Users ');
+
                 this.submit('get', this.serviceUrl).then(response => {
                     this.users = response;
+                    this.resetServiceMessage();
                 });
             },
             searchUsers(query) {
-                let searchUrl = this.serviceUrl;
+                this.setServiceState('filtered');
+                this.setServiceMessagePattern('Users ');
 
+                let searchUrl = this.serviceUrl;
                 if (query) {
                     searchUrl += '?search_by_all_names_partial=' + query;
                 }
 
                 this.submit('get', searchUrl).then(response => {
                     this.users = response;
+                    this.resetServiceMessage();
                 });
             },
             editUser(index, user) {
-                this.serviceState = 'edited';
+                this.setServiceState('edited');
+
                 this.submit('put',
                     this.serviceUrl + "/" + user['_id'], user
                 ).then(response => {
                     this.users.splice(index, 1, response);
+                    this.resetServiceMessage();
                 });
             },
             deleteUser(index, user) {
-                this.serviceState = 'deleted';
+                this.setServiceState('deleted');
+
                 this.submit('delete',
                     this.serviceUrl + "/" + user['_id']
                 ).then(response => {
                     this.users.splice(index, 1);
+                    this.resetServiceMessage();
                 });
 
             },
             createUser(index, user) {
-                this.serviceState = 'created';
+                this.setServiceState('created');
                 this.submit('post',
                             this.serviceUrl,
                             user
                 ).then(response => {
                     this.users.splice(index, 1, response);
+                    this.resetServiceMessage();
                 });
             },
-            submit(requestType, url, submitData) {
+            submit(requestType, url, submitData, ) {
                 return new Promise((resolve, reject) => {
                     this.$http[requestType](url, submitData)
                         .then(response => {
                             this.error = '';
 
                             if (this.successServiceMessage) {
+                                console.log('successServiceMessage:' + this.successServiceMessage);
+                                console.log('serviceState:' + this.serviceState);
                                 this.$message({
                                     message: this.successServiceMessage,
                                     type: 'success'
@@ -110,10 +135,10 @@
         },
         computed: {
             successServiceMessage: function () {
-                return 'User ' + this.serviceState;
+                return this.messagePattern + this.serviceState;
             },
             failServiceMessage: function () {
-                return 'User not ' + this.serviceState;
+                return this.messagePattern + 'not ' + this.serviceState;
             }
         },
         mounted: function () {
