@@ -1,0 +1,48 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "version": 1,
+      "createdBy": null,
+      "editedBy": null,
+      "creationDatetime": null,
+      "editionDatetime": null,
+      "firstName": "Pesho",
+      "surname": "Stupid",
+      "lastName": "Peshov"
+    },
+    {
+      "id": "2",
+      "version": 1,
+      "createdBy": null,
+      "editedBy": null,
+      "creationDatetime": null,
+      "editionDatetime": null,
+      "firstName": "Gosho",
+      "surname": "Gargamel",
+      "lastName": "Goshev"
+    },
+    {
+      "id": "3",
+      "version": 1,
+      "createdBy": null,
+      "editedBy": null,
+      "creationDatetime": null,
+      "editionDatetime": null,
+      "firstName": "Kolio",
+      "surname": "The only one",
+      "lastName": "Kolev"
+    },
+    {
+      "id": "4",
+      "version": 2,
+      "createdBy": null,
+      "editedBy": null,
+      "creationDatetime": null,
+      "editionDatetime": null,
+      "firstName": "Macho",
+      "surname": "Macho",
+      "lastName": "Kolev"
+    }
+  ]
+}

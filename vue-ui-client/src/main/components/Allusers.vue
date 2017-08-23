@@ -36,7 +36,7 @@ export default {
       items: [],
       error: '',
       checked: [],
-      searchServiceUrl: 'http://localhost:23002/api/users'
+      searchServiceUrl: 'http://localhost:23000/api/users'
     }
   },
   components: {

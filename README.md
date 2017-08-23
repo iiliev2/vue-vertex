@@ -1,9 +1,12 @@
-# Vue-Vertex
+# Vue-Vertex 2.0
 
-Vue-Vertex is a simple web application, a PoC to illustrate the integration of two innovative frameworks - a high-performance, scalable back-end and a modern front-end.
-A Vert.x web server exposes a simple REST API, which is fetching data from a MongoDB database. It is also serving a Vue.js-built SPA, which is using REST calls to interface back with the server.
-The various modules of the application are packaged in a single executable fat jar using maven.
+Vue-Vertex 2.0 is a PoC of a web application, built as a distributed system. Each of the three main components is deployed as an independent microservice:
+-a Vert.x web server is serving a Vue.js-built SPA, which is using REST calls to perform various actions on a collection of users. The server also acts as a proxy for any calls under /api, forwarding them on the event bus.
+-an event bus message consumer acts as a rest-api, and handles any forwarded requests from the web server. This component demonstrates the use of custom objects, transmitted over the event bus.
+-a proxy service component to illustrate the use of the proxy generation and service discovery facilities. The DAO is exposed as a simple interface in the service discovery.
 
-To build the application run mvn clean, mvn install in the parent project. After that you can run the jar using the start script in the tools porject.
+Each microservice is built as a separate executable standalone jar. When executed, they will attempt to enter a cluster, depending on configuration.
 
-You can run the webpack-dev-server throgh the included batch script run-webpack-dev-server.bat.
+To build the application run mvn clean install in the parent project. After that you can run tools/start_system.bat to start the cluster.
+
+You can run the webpack-dev-server though the included batch script run-webpack-dev-server.bat when developing the SPA.

@@ -3,8 +3,7 @@ var path = require('path');
 var webpack = require('webpack');
 
 const PATHS = {
-  build: path.join(__dirname, "..", "vw-web", 'target', 'classes',
-    'WEB-INF')
+  build: path.join(__dirname, 'target', 'classes', 'WEB-INF')
 };
 
 module.exports = {

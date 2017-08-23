@@ -1,0 +1,1 @@
+This module provides a more sophisticated implementation of the users DAO using mongo db.

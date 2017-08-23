@@ -1,0 +1,1 @@
+This module is a web server, which serves static content from the WEB-IF folder, and also forwards any requests on /api on the event bus. If there is a restapi module registered at the requested path, it will handle the request and reply back to the web server, which will then relay the response.

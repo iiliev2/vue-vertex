@@ -1,36 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>vw.be</groupId>
     <artifactId>vue-vertex</artifactId>
-    <packaging>pom</packaging>
     <version>2.0-SNAPSHOT</version>
-
+    <packaging>pom</packaging>
     <modules>
         <module>vue-ui-client</module>
         <module>vw-common</module>
-        <module>vw-persistence</module>
-        <module>vw-persistence-inmem</module>
-        <module>vw-persistence-mongodb</module>
+        <module>vw-proxy-service</module>
+        <module>vw-users-persistence</module>
+        <module>vw-users-mongodb</module>
         <module>vw-web</module>
-        <module>vw-monigoring</module>
+        <module>vw-monitoring</module>
         <module>vw-restapi</module>
+        <module>vw-users-restapi</module>
     </modules>
-
     <properties>
-        <stack.version>3.4.2</stack.version>
         <vertx.version>${stack.version}</vertx.version>
-        <!-- The main verticle, i.e. the entry point of your application.
-        Used when the Main-Class is io.vertx.core.Launcher - must be overridden-->
-        <vertx.verticle/>
-        <!-- The main class used to start the application, defaults to io.vertx.core.Launcher
-        must be overridden -->
-        <vertx.launcher/>
+        <!-- needed when running the jar -->
+        <main.verticle></main.verticle>
+        <!-- needed when running with the vertx-maven plugin -->
+        <vertx.verticle></vertx.verticle>
+        <stack.version>3.4.2</stack.version>
+        <vertx.projectVersion>3.4.2</vertx.projectVersion>
+        <vertx.launcher>vw.be.common.DistributedLauncher</vertx.launcher>
+        <fabric8-vertx-maven-plugin.projectVersion>1.0.9</fabric8-vertx-maven-plugin.projectVersion>
     </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -42,8 +40,22 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
     <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.8.2</version>
+        </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
@@ -57,7 +69,6 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-lang-groovy</artifactId>
         </dependency>
-
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-codegen</artifactId>
@@ -67,7 +78,6 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-sockjs-service-proxy</artifactId>
         </dependency>
-
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
@@ -80,8 +90,6 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-hazelcast</artifactId>
         </dependency>
-
-        <!-- Microservice toolbox -->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-service-discovery</artifactId>
@@ -91,8 +99,12 @@
             <artifactId>vertx-circuit-breaker</artifactId>
         </dependency>
     </dependencies>
-
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/conf</directory>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -105,24 +117,25 @@
                         <generatedTestSourcesDirectory>src/test/generated</generatedTestSourcesDirectory>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>io.fabric8</groupId>
-                    <artifactId>vertx-maven-plugin</artifactId>
-                    <version>1.0.6</version>
-                    <executions>
-                        <execution>
-                            <id>vmp</id>
-                            <goals>
-                                <goal>initialize</goal>
-                                <goal>package</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <redeploy>true</redeploy>
-                    </configuration>
-                </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>vertx-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>vmp-init-package</id>
+                        <goals>
+                            <goal>initialize</goal>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <redeploy>true</redeploy>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

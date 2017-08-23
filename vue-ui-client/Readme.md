@@ -1,0 +1,1 @@
+This is a SPA built on vue.js 2.

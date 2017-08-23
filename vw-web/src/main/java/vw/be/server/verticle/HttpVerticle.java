@@ -1,26 +1,26 @@
 package vw.be.server.verticle;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.http.*;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import io.vertx.servicediscovery.ServiceReference;
 import vw.be.common.MicroServiceVerticle;
-import vw.be.server.controller.ManageUserRestController;
+import vw.be.restapi.eventbus.*;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-import static vw.be.server.common.IHttpApiConstants.*;
+import static vw.be.restapi.IHttpApiConstants.*;
 import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_FAILED_MESSAGE;
 import static vw.be.server.common.IResourceBundleConstants.HTTP_SERVER_STARTED_OK_MESSAGE;
 import static vw.be.server.common.IWebConfigurationConstants.*;
@@ -52,20 +52,9 @@ public class HttpVerticle extends MicroServiceVerticle {
         final HttpServerOptions options = new HttpServerOptions().setCompressionSupported(true);
 
         // Create the HTTP server and pass the "accept" method to the request handler.
-        vertx
-                .createHttpServer(options)
-                .requestHandler(applicationRouter::accept)
-                .listen(
-                        config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                        next
-                       );
-        //____________________________________________________________
-        vertx.createHttpServer().requestHandler(req -> {
-            System.out.println("Proxying request: " + req.uri());
-
-        }).listen(config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE),
-                  next);
-        //____________________________________________________________
+        vertx.createHttpServer(options)
+             .requestHandler(applicationRouter::accept)
+             .listen(config().getInteger(HTTP_PORT_KEY, DEFAULT_HTTP_PORT_VALUE), next);
     }
 
     /**
@@ -94,47 +83,35 @@ public class HttpVerticle extends MicroServiceVerticle {
                                                      .allowedMethods(defineAllowedCORSHttpMethods()));
 
         //Store post bodies in rooting context for all api calls
-        applicationRouter.route(HttpMethod.POST,
-                                config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN))
-                         .handler(BodyHandler.create());
-        applicationRouter.route(HttpMethod.PUT,
-                                config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN))
-                         .handler(BodyHandler.create());
+        String restApisRoot = config().getString(REST_API_CONTEXT_PATTERN_KEY, DEFAULT_REST_API_CONTEXT_PATTERN);
+        applicationRouter.route(HttpMethod.POST, restApisRoot).handler(BodyHandler.create());
+        applicationRouter.route(HttpMethod.PUT, restApisRoot).handler(BodyHandler.create());
 
-        // mount sub router for manage users web restful api
-        ManageUserRestController manageUserRestController = new ManageUserRestController(vertx);
-        /*
-        applicationRouter.mountSubRouter(config().getString(USER_WEB_API_CONTEXT_KEY,
-                                                            DEFAULT_USER_WEB_API_CONTEXT_VALUE),
-                                         manageUserRestController.getRestAPIRouter());*/
-        applicationRouter.route(DEFAULT_REST_API_CONTEXT_PATTERN).handler(event -> {
-            HttpServerRequest req = event.request();
-            discovery.getRecord(new JsonObject().put("name", req.uri()), ar -> {
-                if (ar.succeeded() && ar.result() != null) {
-                    // Retrieve the service reference
-                    ServiceReference reference = discovery.getReference(ar.result());
-                    // Retrieve the service object
-                    HttpClient client = reference.getAs(HttpClient.class);
-                    HttpClientRequest c_req = client.request(req.method(), 8282, "localhost", req.uri(), c_res -> {
-                        System.out.println("Proxying response: " + c_res.statusCode());
-                        req.response().setChunked(true);
-                        req.response().setStatusCode(c_res.statusCode());
-                        req.response().headers().setAll(c_res.headers());
-                        c_res.handler(data -> {
-                            System.out.println("Proxying response body: " + data.toString("ISO-8859-1"));
-                            req.response().write(data);
-                        });
-                        c_res.endHandler((v) -> req.response().end());
-                    });
-                    c_req.setChunked(true);
-                    c_req.headers().setAll(req.headers());
-                    req.handler(data -> {
-                        System.out.println("Proxying request body " + data.toString("ISO-8859-1"));
-                        c_req.write(data);
-                    });
-                    req.endHandler((v) -> c_req.end());
-                    // Dont' forget to release the service
-                    reference.release();
+        EventBus eventBus = vertx.eventBus();
+
+        Util.initEventBusCodecs(eventBus, HTTPRequestOverEB.class, new HTTPRequestCodec(), new HTTPResponseCodec());
+
+        applicationRouter.route(restApisRoot).handler(event -> {
+            HttpServerResponse serverResponse = event.response();
+            HTTPRequestOverEB ebRequest = HTTPRequestOverEB.from(restApisRoot, event);
+            String restApiName = ebRequest.getTargetAPI();
+            if (restApiName.equals("/")) {
+                respond(serverResponse, HttpResponseStatus.OK, "Vue-Vertex REST APIs root");
+                return;
+            }
+            LOGGER.info("Forwarding to rest api:" + restApiName);
+            eventBus.<HTTPResponseOverEB>send(restApiName, ebRequest, reply -> {
+                if (reply.succeeded()) {
+                    HTTPResponseOverEB ebResponse = reply.result().body();
+                    for (Map.Entry<String, Object> param : ebResponse.getHeaders().getMap().entrySet()) {
+                        if (param.getValue() instanceof String)
+                            serverResponse.putHeader(param.getKey(), (String) param.getValue());
+                    }
+                    respond(serverResponse, ebResponse.getStatus(), ebResponse.getBody());
+                } else {
+                    respond(serverResponse,
+                            HttpResponseStatus.SERVICE_UNAVAILABLE,
+                            reply.cause().getMessage());
                 }
             });
         });
@@ -142,6 +119,11 @@ public class HttpVerticle extends MicroServiceVerticle {
         //Map application root context to webroot folder
         applicationRouter.route(STATIC_RESOURCES_CONTEXT)
                          .handler(StaticHandler.create(WEB_ROOT_FOLDER).setCachingEnabled(false));
+    }
+
+    private void respond(HttpServerResponse serverResponse, HttpResponseStatus status, String msg) {
+        serverResponse.setStatusCode(status.code()).setStatusMessage(status.reasonPhrase()).end(msg);
+
     }
 
     private Set<HttpMethod> defineAllowedCORSHttpMethods() {

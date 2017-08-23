@@ -1,0 +1,1 @@
+This base module defines an abstract verticle which will register a proxy service in the service discovery.

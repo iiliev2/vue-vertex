@@ -1,4 +1,5 @@
-<code_scheme name="Default">
+<code_scheme name="vertx">
+  <option name="WRAP_COMMENTS" value="true" />
   <JavaCodeStyleSettings>
     <option name="ANNOTATION_PARAMETER_WRAP" value="5" />
     <option name="ALIGN_MULTILINE_ANNOTATION_PARAMETERS" value="true" />
@@ -36,5 +37,8 @@
     <option name="PARAMETER_ANNOTATION_WRAP" value="5" />
     <option name="VARIABLE_ANNOTATION_WRAP" value="5" />
     <option name="ENUM_CONSTANTS_WRAP" value="5" />
+    <indentOptions>
+      <option name="LABEL_INDENT_SIZE" value="1" />
+    </indentOptions>
   </codeStyleSettings>
 </code_scheme>
