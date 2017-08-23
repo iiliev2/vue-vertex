@@ -18,6 +18,16 @@
                 <version>1.4</version>
                 <executions>
                     <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v6.11.0</nodeVersion>
+                            <npmVersion>5.0.3</npmVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>npm install</id>
                         <goals>
                             <goal>npm</goal>
