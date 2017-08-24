@@ -8,6 +8,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
 
 /**
  * Utility class for IO operations.
@@ -45,9 +46,9 @@ public class IOUtils {
         return loadConfiguration(() -> new Scanner(conf));
     }
 
-    private static JsonObject loadConfiguration(ScannerCreator loader) {
+    private static JsonObject loadConfiguration(Callable<Scanner> loader) {
         JsonObject conf = new JsonObject();
-        try (Scanner scanner = loader.create().useDelimiter("\\A")) {
+        try (Scanner scanner = loader.call().useDelimiter("\\A")) {
             String sconf = scanner.next();
             try {
                 conf = new JsonObject(sconf);
@@ -58,9 +59,5 @@ public class IOUtils {
             LOG.info(e.getMessage());
         }
         return conf;
-    }
-
-    private interface ScannerCreator {
-        Scanner create() throws Exception;
     }
 }
